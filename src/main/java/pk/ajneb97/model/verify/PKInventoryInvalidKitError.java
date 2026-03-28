@@ -21,7 +21,7 @@ public class PKInventoryInvalidKitError extends PKBaseError{
 
     @Override
     public void sendMessage(Player player) {
-        List<String> hover = new ArrayList<String>();
+        List<String> hover = new ArrayList<>();
 
         JSONMessage jsonMessage = new JSONMessage(player,prefix+"&7Invalid kit named &c"+kitName+" &7on file &c"+file);
         hover.add("&eTHIS IS AN ERROR!");

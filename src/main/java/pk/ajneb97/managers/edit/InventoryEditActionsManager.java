@@ -18,6 +18,7 @@ import pk.ajneb97.utils.OtherUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class InventoryEditActionsManager {
 
     private PlayerKits2 plugin;
@@ -49,7 +50,7 @@ public class InventoryEditActionsManager {
         new InventoryItem(inv, 53, Material.EMERALD_BLOCK).name("&6&lAdd Action").ready();
 
         //Set Info Item
-        List<String> lore = new ArrayList<String>();
+        List<String> lore = new ArrayList<>();
         lore.add("&7You are currently editing the actions");
         if(type.equals("claim")){
             lore.add("&7when the player claims the kit.");
@@ -61,7 +62,7 @@ public class InventoryEditActionsManager {
 
         //Set Actions
         Kit kit = plugin.getKitsManager().getKitByName(inventoryPlayer.getKitName());
-        ArrayList<KitAction> actions = getKitActionsFromType(kit,type);
+        List<KitAction> actions = getKitActionsFromType(kit,type);
         int slot = 0;
         for(KitAction kitAction : actions){
             String executeBeforeItems = kitAction.isExecuteBeforeItems() ? "&aYES" : "&cNO";
@@ -98,7 +99,7 @@ public class InventoryEditActionsManager {
     public void removeAction(InventoryPlayer inventoryPlayer,int slot){
         Kit kit = plugin.getKitsManager().getKitByName(inventoryPlayer.getKitName());
         String type = inventoryPlayer.getInventoryName().replace("edit_actions_","");
-        ArrayList<KitAction> actions = getKitActionsFromType(kit,type);
+        List<KitAction> actions = getKitActionsFromType(kit,type);
         actions.remove(slot);
 
         openInventory(inventoryPlayer,type);
@@ -121,7 +122,7 @@ public class InventoryEditActionsManager {
     public void addAction(InventoryPlayer inventoryPlayer,String message){
         Kit kit = plugin.getKitsManager().getKitByName(inventoryPlayer.getKitName());
         String type = inventoryPlayer.getInventoryName().replace("edit_chat_add_action_","");
-        ArrayList<KitAction> actions = getKitActionsFromType(kit,type);
+        List<KitAction> actions = getKitActionsFromType(kit,type);
         actions.add(new KitAction(message,null,false,false));
 
         inventoryEditManager.removeInventoryPlayer(inventoryPlayer.getPlayer());
@@ -145,8 +146,8 @@ public class InventoryEditActionsManager {
         }
     }
 
-    public ArrayList<KitAction> getKitActionsFromType(Kit kit,String type){
-        ArrayList<KitAction> actions = null;
+    public List<KitAction> getKitActionsFromType(Kit kit,String type){
+        List<KitAction> actions = null;
         if(type.equals("claim")){
             actions = kit.getClaimActions();
         }else{

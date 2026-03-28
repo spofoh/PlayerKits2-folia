@@ -1,7 +1,6 @@
 package pk.ajneb97.utils;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -14,8 +13,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import pk.ajneb97.PlayerKits2;
 import pk.ajneb97.managers.InventoryRequirementsManager;
-import pk.ajneb97.managers.MessagesManager;
-import pk.ajneb97.model.internal.KitVariable;
 import pk.ajneb97.model.item.KitItem;
 
 import java.util.ArrayList;
@@ -51,22 +48,30 @@ public class MiniMessageUtils {
     }
 
     public static void setCommonItemName(KitItem commonItem, ItemMeta meta){
-        commonItem.setName(MiniMessage.miniMessage().serialize(meta.displayName()));
+        if(meta.hasDisplayName() && meta.displayName() != null){
+            commonItem.setName(MiniMessage.miniMessage().serialize(meta.displayName()));
+        }
     }
 
     public static void setCommonItemLore(List<String> lore, ItemMeta meta){
-        for (Component line : meta.lore()) {
-            lore.add(MiniMessage.miniMessage().serialize(line));
+        if(meta.hasLore() && meta.lore() != null){
+            for (Component line : meta.lore()) {
+                lore.add(MiniMessage.miniMessage().serialize(line));
+            }
         }
     }
 
     public static void setCommonItemNameLegacy(KitItem commonItem, ItemMeta meta){
-        commonItem.setName(LegacyComponentSerializer.legacyAmpersand().serialize(meta.displayName()));
+        if(meta.hasDisplayName() && meta.displayName() != null){
+            commonItem.setName(LegacyComponentSerializer.legacyAmpersand().serialize(meta.displayName()));
+        }
     }
 
     public static void setCommonItemLoreLegacy(List<String> lore, ItemMeta meta){
-        for (Component line : meta.lore()) {
-            lore.add(LegacyComponentSerializer.legacyAmpersand().serialize(line));
+        if(meta.hasLore() && meta.lore() != null){
+            for (Component line : meta.lore()) {
+                lore.add(LegacyComponentSerializer.legacyAmpersand().serialize(line));
+            }
         }
     }
 
@@ -84,6 +89,7 @@ public class MiniMessageUtils {
     }
 
     public static void setRequirementsMessage(ItemMeta meta, String kitName, Player player, InventoryRequirementsManager inventoryRequirementsManager){
+        if(!meta.hasLore() || meta.lore() == null) return;
         List<Component> newLore = new ArrayList<>();
         PlainTextComponentSerializer plainSerializer = PlainTextComponentSerializer.plainText();
         for(Component line : meta.lore()){

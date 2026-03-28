@@ -1,20 +1,21 @@
 package pk.ajneb97.model;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PlayerData {
 
     private String name;
     private UUID uuid;
 
-    private ArrayList<PlayerDataKit> kits;
+    private List<PlayerDataKit> kits;
     private boolean modified;
 
     public PlayerData(UUID uuid, String name){
         this.name = name;
         this.uuid = uuid;
-        this.kits = new ArrayList<>();
+        this.kits = new CopyOnWriteArrayList<>();
         this.modified = false;
     }
 
@@ -34,12 +35,12 @@ public class PlayerData {
         this.name = name;
     }
 
-    public ArrayList<PlayerDataKit> getKits() {
+    public List<PlayerDataKit> getKits() {
         return kits;
     }
 
-    public void setKits(ArrayList<PlayerDataKit> kits) {
-        this.kits = kits;
+    public void setKits(List<PlayerDataKit> kits) {
+        this.kits = new CopyOnWriteArrayList<>(kits);
     }
 
     public void addKit(PlayerDataKit kit){
@@ -130,11 +131,7 @@ public class PlayerData {
     }
 
     public void resetKit(String kitName){
-        for(int i=0;i<kits.size();i++){
-            if(kits.get(i).getName().equals(kitName)){
-                kits.remove(i);
-                modified = true;
-            }
-        }
+        kits.removeIf(kit -> kit.getName().equals(kitName));
+        modified = true;
     }
 }

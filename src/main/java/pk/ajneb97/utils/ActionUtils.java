@@ -12,11 +12,13 @@ import pk.ajneb97.api.PlayerKitsAPI;
 import pk.ajneb97.libs.actionbar.ActionBarAPI;
 import pk.ajneb97.libs.titles.TitleAPI;
 import pk.ajneb97.managers.MessagesManager;
+import pk.ajneb97.utils.TaskUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+@SuppressWarnings("deprecation")
 public class ActionUtils {
 
     public static void message(Player player,String actionLine) {
@@ -29,7 +31,9 @@ public class ActionUtils {
 
     public static void consoleCommand(String actionLine){
         ConsoleCommandSender sender = Bukkit.getConsoleSender();
-        Bukkit.dispatchCommand(sender, actionLine);
+        PlayerKits2 plugin = PlayerKitsAPI.getPlugin();
+        // On Folia, dispatchCommand must run on the global region thread
+        TaskUtils.runSync(plugin, () -> Bukkit.dispatchCommand(sender, actionLine));
     }
 
     public static void playerCommand(Player player, String actionLine){
@@ -38,13 +42,13 @@ public class ActionUtils {
 
     public static void playSound(Player player,String actionLine){
         String[] sep = actionLine.split(";");
-        Sound sound = null;
-        int volume = 0;
-        float pitch = 0;
+        Sound sound;
+        int volume;
+        float pitch;
         try {
             sound = getSoundByName(sep[0]);
-            volume = Integer.valueOf(sep[1]);
-            pitch = Float.valueOf(sep[2]);
+            volume = Integer.parseInt(sep[1]);
+            pitch = Float.parseFloat(sep[2]);
         }catch(Exception e ) {
             Bukkit.getConsoleSender().sendMessage(PlayerKits2.prefix+
                     MessagesManager.getLegacyColoredMessage("&7Sound Name: &c"+sep[0]+" &7is not valid. Change it in the config!"));
@@ -67,15 +71,18 @@ public class ActionUtils {
     public static void actionbar(Player player, String actionLine, PlayerKits2 plugin){
         String[] sep = actionLine.split(";");
         String text = sep[0];
-        int duration = Integer.valueOf(sep[1]);
+        int duration = Integer.parseInt(sep[1]);
+        if(duration <= 0) {
+            return;
+        }
         ActionBarAPI.sendActionBar(player,text,duration,plugin);
     }
 
     public static void title(Player player,String actionLine){
         String[] sep = actionLine.split(";");
-        int fadeIn = Integer.valueOf(sep[0]);
-        int stay = Integer.valueOf(sep[1]);
-        int fadeOut = Integer.valueOf(sep[2]);
+        int fadeIn = Integer.parseInt(sep[0]);
+        int stay = Integer.parseInt(sep[1]);
+        int fadeOut = Integer.parseInt(sep[2]);
 
         String title = sep[3];
         String subtitle = sep[4];
@@ -89,9 +96,9 @@ public class ActionUtils {
     }
 
     public static void firework(Player player,String actionLine,PlayerKits2 plugin){
-        ArrayList<Color> colors = new ArrayList<Color>();
-        FireworkEffect.Type type = null;
-        ArrayList<Color> fadeColors = new ArrayList<Color>();
+        ArrayList<Color> colors = new ArrayList<>();
+        FireworkEffect.Type type = FireworkEffect.Type.BALL;
+        ArrayList<Color> fadeColors = new ArrayList<>();
         int power = 0;
 
         String[] sep = actionLine.split(" ");
@@ -113,14 +120,14 @@ public class ActionUtils {
                 }
             }else if(s.startsWith("power:")) {
                 s = s.replace("power:", "");
-                power = Integer.valueOf(s);
+                power = Integer.parseInt(s);
             }
         }
 
         Location location = player.getLocation();
 
         ServerVersion serverVersion = PlayerKits2.serverVersion;
-        EntityType entityType = null;
+        EntityType entityType;
         if(serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_20_R4)){
             entityType = EntityType.FIREWORK_ROCKET;
         }else{

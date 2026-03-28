@@ -2,13 +2,13 @@ package pk.ajneb97.managers;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.scheduler.BukkitRunnable;
 import pk.ajneb97.PlayerKits2;
 import pk.ajneb97.configs.KitsConfigManager;
 import pk.ajneb97.configs.PlayersConfigManager;
 import pk.ajneb97.model.*;
 import pk.ajneb97.model.item.KitItem;
 import pk.ajneb97.model.item.KitItemSkullData;
+import pk.ajneb97.utils.TaskUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,15 +23,12 @@ public class MigrationManager {
     }
 
     public void migrate(CommandSender sender){
-        new BukkitRunnable(){
-            @Override
-            public void run() {
-                migrateKits(sender);
-                migratePlayers(sender);
+        TaskUtils.runAsync(plugin, () -> {
+            migrateKits(sender);
+            migratePlayers(sender);
 
-                sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aMigration completed."));
-            }
-        }.runTaskAsynchronously(plugin);
+            sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aMigration completed."));
+        });
     }
 
     public void migrateKits(CommandSender sender){
@@ -46,16 +43,17 @@ public class MigrationManager {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         Kit defaultValues = plugin.getConfigsManager().getMainConfigManager().getNewKitDefault();
         KitsConfigManager kitsConfigManager = plugin.getConfigsManager().getKitsConfigManager();
-        if(config.contains("Kits")){
-            for(String kitName : config.getConfigurationSection("Kits").getKeys(false)){
+        org.bukkit.configuration.ConfigurationSection kitsSection = config.getConfigurationSection("Kits");
+        if(kitsSection != null){
+            for(String kitName : kitsSection.getKeys(false)){
                 try{
                     String path = "Kits."+kitName;
                     Kit kit = new Kit(kitName);
 
-                    boolean oneTime = config.contains(path+".one_time") ? config.getBoolean(path+".one_time") : false;
+                    boolean oneTime = config.getBoolean(path+".one_time");
                     int cooldown = config.contains(path+".cooldown") ? config.getInt(path+".cooldown") : 0;
                     boolean permissionRequired = config.contains(path+".permission");
-                    boolean autoArmor = config.contains(path+".auto_armor") ? config.getBoolean(path+".auto_armor") : false;
+                    boolean autoArmor = config.getBoolean(path+".auto_armor");
 
                     ArrayList<KitAction> claimActions = new ArrayList<>();
                     if(config.contains(path+".Commands")){
@@ -65,8 +63,9 @@ public class MigrationManager {
                     }
 
                     ArrayList<KitItem> items = new ArrayList<>();
-                    if(config.contains(path+".Items")){
-                        for(String key : config.getConfigurationSection(path+".Items").getKeys(false)){
+                    org.bukkit.configuration.ConfigurationSection itemsSection = config.getConfigurationSection(path+".Items");
+                    if(itemsSection != null){
+                        for(String key : itemsSection.getKeys(false)){
                             String pathItem = path+".Items."+key;
                             KitItem kitItem = kitItemManager.getKitItemFromV1Config(config,pathItem);
                             items.add(kitItem);
@@ -77,7 +76,7 @@ public class MigrationManager {
                     if(config.contains(path+".price")){
                         kitRequirements = new KitRequirements();
                         kitRequirements.setPrice(config.getInt(path+".price"));
-                        boolean oneTimeBuy = config.contains(path+".one_time_buy") ? config.getBoolean(path+".one_time_buy") : false;
+                        boolean oneTimeBuy = config.getBoolean(path+".one_time_buy");
                         kitRequirements.setOneTimeRequirements(oneTimeBuy);
                     }
 
@@ -102,7 +101,7 @@ public class MigrationManager {
                     sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aKit &7"+kitName+" &amigrated."));
                 }catch(Exception e){
                     sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cError while trying to migrate kit &7"+kitName+"&c, check console."));
-                    e.printStackTrace();
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
                 }
 
             }
@@ -126,13 +125,16 @@ public class MigrationManager {
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
         PlayersConfigManager playersConfigManager = plugin.getConfigsManager().getPlayersConfigManager();
 
-        if(config.contains("Players")) {
-            for (String uuid : config.getConfigurationSection("Players").getKeys(false)) {
+        org.bukkit.configuration.ConfigurationSection playersSection = config.getConfigurationSection("Players");
+        if(playersSection != null) {
+            for (String uuid : playersSection.getKeys(false)) {
                 try {
                     String path = "Players."+uuid;
                     String name = config.getString(path+".name");
                     PlayerData playerData = new PlayerData(UUID.fromString(uuid),name);
-                    for(String kitName : config.getConfigurationSection(path).getKeys(false)){
+                    org.bukkit.configuration.ConfigurationSection playerSection = config.getConfigurationSection(path);
+                    if(playerSection != null) {
+                        for(String kitName : playerSection.getKeys(false)){
                         if(kitName.equals("name")){
                            continue;
                         }
@@ -142,6 +144,7 @@ public class MigrationManager {
                         playerDataKit.setCooldown(config.getLong(path+"."+kitName+".cooldown"));
                         playerDataKit.setOneTime(config.getBoolean(path+"."+kitName+".one_time"));
                         playerData.addKit(playerDataKit);
+                        }
                     }
 
                     playersConfigManager.saveConfig(playerData);
@@ -149,7 +152,7 @@ public class MigrationManager {
                     sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aPlayer &7"+name+" &amigrated."));
                 } catch (Exception e) {
                     sender.sendMessage(PlayerKits2.prefix + MessagesManager.getLegacyColoredMessage(" &cError while trying to migrate player data with uuid &7" + uuid + "&c, check console."));
-                    e.printStackTrace();
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
                 }
             }
         }

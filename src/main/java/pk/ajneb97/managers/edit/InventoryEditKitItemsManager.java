@@ -18,6 +18,7 @@ import pk.ajneb97.utils.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class InventoryEditKitItemsManager {
 
     private PlayerKits2 plugin;
@@ -63,7 +64,7 @@ public class InventoryEditKitItemsManager {
 
         //Kit Items
         Kit kit = plugin.getKitsManager().getKitByName(inventoryPlayer.getKitName());
-        ArrayList<KitItem> items = kit.getItems();
+        List<KitItem> items = kit.getItems();
         KitItemManager kitItemManager = plugin.getKitItemManager();
         int slot = 0;
         for(KitItem kitItem : items){

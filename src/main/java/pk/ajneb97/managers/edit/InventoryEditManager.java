@@ -18,11 +18,12 @@ import pk.ajneb97.utils.OtherUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class InventoryEditManager {
 
     private PlayerKits2 plugin;
-    private ArrayList<InventoryPlayer> players;
+    private List<InventoryPlayer> players;
     private InventoryEditActionsManager inventoryEditActionsManager;
     private InventoryEditDisplayManager inventoryEditDisplayManager;
     private InventoryEditKitItemsManager inventoryEditKitItemsManager;
@@ -30,7 +31,7 @@ public class InventoryEditManager {
     private InventoryEditRequirementsManager inventoryEditRequirementsManager;
     public InventoryEditManager(PlayerKits2 plugin){
         this.plugin = plugin;
-        this.players = new ArrayList<>();
+        this.players = new CopyOnWriteArrayList<>();
         this.inventoryEditActionsManager = new InventoryEditActionsManager(plugin,this);
         this.inventoryEditDisplayManager = new InventoryEditDisplayManager(plugin,this);
         this.inventoryEditKitItemsManager = new InventoryEditKitItemsManager(plugin,this);
@@ -63,7 +64,7 @@ public class InventoryEditManager {
         return inventoryEditPositionManager;
     }
 
-    public ArrayList<InventoryPlayer> getPlayers() {
+    public List<InventoryPlayer> getPlayers() {
         return players;
     }
 
@@ -82,7 +83,7 @@ public class InventoryEditManager {
         Kit kit = plugin.getKitsManager().getKitByName(inventoryPlayer.getKitName());
 
         //Set Position
-        List<String> lore = new ArrayList<String>();
+        List<String> lore = new ArrayList<>();
         lore.add("&7Click to define the position of the display");
         lore.add("&7item of this kit in the Inventory.");
         lore.add("");
@@ -98,7 +99,7 @@ public class InventoryEditManager {
         new InventoryItem(inv, 10, Material.DROPPER).name("&eSet &6&lSlot").lore(lore).ready();
 
         //Set Cooldown
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to define the cooldown of");
         lore.add("&7the kit.");
         lore.add("");
@@ -110,7 +111,7 @@ public class InventoryEditManager {
         }
 
         //Set Permission Required
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to enable/disable whether this kit");
         lore.add("&7needs permissions to be claimed.");
         lore.add("&7The permission will be:");
@@ -124,7 +125,7 @@ public class InventoryEditManager {
         new InventoryItem(inv, 12, Material.REDSTONE_BLOCK).name("&eSet &6&lPermission Required").lore(lore).ready();
 
         //Set One Time
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to enable/disable whether this kit");
         lore.add("&7should be claimed just one time.");
         lore.add("");
@@ -136,7 +137,7 @@ public class InventoryEditManager {
         new InventoryItem(inv, 20, Material.GHAST_TEAR).name("&eSet &6&lOne Time").lore(lore).ready();
 
         //Set Auto Armor
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to enable/disable whether armor");
         lore.add("&7should be equipped automatically when");
         lore.add("&7this kit is claimed.");
@@ -155,7 +156,7 @@ public class InventoryEditManager {
         }else{
             headMaterial = Material.PLAYER_HEAD;
         }
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the default kit display");
         lore.add("&7item.");
         lore.add("");
@@ -165,7 +166,7 @@ public class InventoryEditManager {
                 .name("&eSet &6&lDefault Display Item").lore(lore).ready();
 
         //Display Item NO PERMISSION
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the kit display item when");
         lore.add("&7player doesn't have the permissions to");
         lore.add("&7claim it.");
@@ -176,7 +177,7 @@ public class InventoryEditManager {
                 .name("&eSet &6&lNo Permissions Display Item").lore(lore).ready();
 
         //Display Item ONE TIME
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the kit display item when");
         lore.add("&7one time option is enabled and the player");
         lore.add("&7has already claimed it.");
@@ -187,7 +188,7 @@ public class InventoryEditManager {
                 .name("&eSet &6&lOne Time Display Item").lore(lore).ready();
 
         //Display Item COOLDOWN
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the kit display item when");
         lore.add("&7the player is on cooldown.");
         lore.add("");
@@ -197,7 +198,7 @@ public class InventoryEditManager {
                 .name("&eSet &6&lCooldown Display Item").lore(lore).ready();
 
         //Display Item ONE TIME REQUIREMENTS
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the kit display item when");
         lore.add("&7one time requirements option is enabled and");
         lore.add("&7the player has already accomplished the");
@@ -209,7 +210,7 @@ public class InventoryEditManager {
                 .name("&eSet &6&lOne Time Requirements Display Item").lore(lore).ready();
 
         //Set Kit Items
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the kit items.");
         lore.add("");
         lore.add("&7Current Items:");
@@ -229,12 +230,12 @@ public class InventoryEditManager {
         new InventoryItem(inv, 14, Material.DIAMOND).name("&eSet &6&lKit Items").lore(lore).ready();
 
         //Set Requirements
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the kit requirements.");
         new InventoryItem(inv, 15, Material.REDSTONE).name("&eSet &6&lRequirements").lore(lore).ready();
 
         //Set Claim Actions
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the actions to execute");
         lore.add("&7when the player claims the kit.");
         lore.add("");
@@ -243,7 +244,7 @@ public class InventoryEditManager {
         new InventoryItem(inv, 23, Material.IRON_INGOT).name("&eSet &6&lClaim Actions").lore(lore).ready();
 
         //Set Error Actions
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the actions to execute");
         lore.add("&7when there is an error when claiming");
         lore.add("&7the kit.");
@@ -256,14 +257,14 @@ public class InventoryEditManager {
         players.add(inventoryPlayer);
     }
 
-    public List<String> setActionItemLore(ArrayList<KitAction> actions,List<String> lore){
+    public List<String> setActionItemLore(List<KitAction> actions,List<String> lore){
         int max = 20;
         if(actions.isEmpty()){
             lore.add(MessagesManager.getLegacyColoredMessage("&cNONE"));
         }else{
             for(KitAction kitAction : actions){
                 String actionLine = kitAction.getAction();
-                List<String> separatedActionLine = new ArrayList<String>();
+                List<String> separatedActionLine = new ArrayList<>();
                 int currentPos = 0;
                 for(int i=0;i<actionLine.length();i++) {
                     if(currentPos >= 35 && actionLine.charAt(i) == ' ') {
@@ -338,7 +339,9 @@ public class InventoryEditManager {
                 plugin.getConfigsManager().getKitsConfigManager().saveConfig(kit);
                 return;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+            // Ignored, not a valid number
+        }
         player.sendMessage(MessagesManager.getLegacyColoredMessage(PlayerKits2.prefix+"&cYou must use a valid number."));
     }
 

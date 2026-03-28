@@ -84,7 +84,7 @@ public class MessagesConfigManager {
             }
 
         }catch(IOException e){
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
         }
     }
 }

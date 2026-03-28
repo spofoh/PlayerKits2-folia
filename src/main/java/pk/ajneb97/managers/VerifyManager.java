@@ -4,7 +4,6 @@ import org.bukkit.entity.Player;
 import pk.ajneb97.PlayerKits2;
 import pk.ajneb97.model.Kit;
 import pk.ajneb97.model.KitAction;
-import pk.ajneb97.model.inventory.InventoryPlayer;
 import pk.ajneb97.model.inventory.ItemKitInventory;
 import pk.ajneb97.model.inventory.KitInventory;
 import pk.ajneb97.model.item.KitItem;
@@ -20,7 +19,7 @@ public class VerifyManager {
     private boolean criticalErrors;
     public VerifyManager(PlayerKits2 plugin) {
         this.plugin = plugin;
-        this.errors = new ArrayList<PKBaseError>();
+        this.errors = new ArrayList<>();
         this.criticalErrors = false;
     }
 
@@ -40,18 +39,18 @@ public class VerifyManager {
     }
 
     public void verify() {
-        this.errors = new ArrayList<PKBaseError>();
+        this.errors = new ArrayList<>();
         this.criticalErrors = false;
 
         //CHECK KITS
-        ArrayList<Kit> kits = plugin.getKitsManager().getKits();
+        List<Kit> kits = plugin.getKitsManager().getKits();
         for(Kit kit : kits) {
             verifyKit(kit);
         }
 
         //CHECK INVENTORIES
         InventoryManager inventoryManager = plugin.getInventoryManager();
-        ArrayList<KitInventory> inventories = inventoryManager.getInventories();
+        List<KitInventory> inventories = inventoryManager.getInventories();
         for(KitInventory inventory : inventories){
             verifyInventory(inventory);
         }
@@ -79,7 +78,7 @@ public class VerifyManager {
         verifyActions(kit.getErrorActions(),"error",kitName);
 
         //Items
-        ArrayList<KitItem> allKitItems = new ArrayList<KitItem>();
+        ArrayList<KitItem> allKitItems = new ArrayList<>();
         allKitItems.add(kit.getDisplayItemDefault());
         allKitItems.add(kit.getDisplayItemCooldown());
         allKitItems.add(kit.getDisplayItemNoPermission());
@@ -105,7 +104,7 @@ public class VerifyManager {
         }
     }
 
-    public void verifyActions(ArrayList<KitAction> actions,String actionGroup,String kitName){
+    public void verifyActions(List<KitAction> actions,String actionGroup,String kitName){
         for(int i=0;i<actions.size();i++){
             KitAction action = actions.get(i);
             String[] actionText = action.getAction().split(" ");

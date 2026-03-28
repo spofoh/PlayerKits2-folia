@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 public class InventoryUtils {
     /**
      * Thanks to Rumsfield
-     * https://www.spigotmc.org/threads/inventoryview-changed-to-interface-backwards-compatibility.651754/
+     * <a href="https://www.spigotmc.org/threads/inventoryview-changed-to-interface-backwards-compatibility.651754/">...</a>
      * In API versions 1.20.6 and earlier, InventoryView is a class.
      * In versions 1.21 and later, it is an interface.
      * This method uses reflection to get the top Inventory object from the

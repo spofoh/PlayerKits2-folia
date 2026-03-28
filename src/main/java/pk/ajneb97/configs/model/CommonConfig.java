@@ -10,13 +10,13 @@ import java.io.IOException;
 
 public class CommonConfig {
 
-    private String fileName;
+    private final String fileName;
     private FileConfiguration fileConfiguration = null;
     private File file = null;
     private String route;
-    private PlayerKits2 plugin;
-    private String folderName;
-    private boolean newFile;
+    private final PlayerKits2 plugin;
+    private final String folderName;
+    private final boolean newFile;
     private boolean isFirstTime;
 
     public CommonConfig(String fileName, PlayerKits2 plugin, String folderName, boolean newFile){
@@ -46,7 +46,7 @@ public class CommonConfig {
                 try {
                     file.createNewFile();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
                 }
             }else {
                 if(folderName != null){
@@ -61,17 +61,15 @@ public class CommonConfig {
         fileConfiguration = new YamlConfiguration();
         try {
             fileConfiguration.load(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidConfigurationException e) {
-            e.printStackTrace();
+        } catch (IOException | InvalidConfigurationException e) {
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
         }
     }
     public void saveConfig() {
         try {
             fileConfiguration.save(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
         }
     }
 

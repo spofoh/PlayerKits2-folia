@@ -17,7 +17,7 @@ public class PKInvalidItem extends PKBaseError{
 
     @Override
     public void sendMessage(Player player) {
-        List<String> hover = new ArrayList<String>();
+        List<String> hover = new ArrayList<>();
 
         JSONMessage jsonMessage = new JSONMessage(player,prefix+"&7Item material &c"+material+" &7on file &c"+file+" &7is not valid.");
         hover.add("&eTHIS IS AN ERROR!");

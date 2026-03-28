@@ -29,8 +29,7 @@ public abstract class DataFolderConfigManager {
                 folder.mkdirs();
                 createFiles();
             }
-        } catch(SecurityException e) {
-            folder = null;
+        } catch(SecurityException ignored) {
         }
     }
 
@@ -53,12 +52,14 @@ public abstract class DataFolderConfigManager {
         String pathFile = plugin.getDataFolder() + File.separator + folderName;
         File folder = new File(pathFile);
         File[] listOfFiles = folder.listFiles();
-        for (File file : listOfFiles) {
-            if (file.isFile()) {
-                String pathName = file.getName();
-                CommonConfig commonConfig = new CommonConfig(pathName, plugin, folderName, true);
-                commonConfig.registerConfig();
-                configs.add(commonConfig);
+        if (listOfFiles != null) {
+            for (File file : listOfFiles) {
+                if (file.isFile()) {
+                    String pathName = file.getName();
+                    CommonConfig commonConfig = new CommonConfig(pathName, plugin, folderName, true);
+                    commonConfig.registerConfig();
+                    configs.add(commonConfig);
+                }
             }
         }
 

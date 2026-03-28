@@ -21,7 +21,7 @@ public class PKKitActionError extends PKBaseError{
 
     @Override
     public void sendMessage(Player player) {
-        List<String> hover = new ArrayList<String>();
+        List<String> hover = new ArrayList<>();
 
         JSONMessage jsonMessage = new JSONMessage(player,prefix+"&7Action (&c"+actionGroup+"&7,&c"+actionId+"&7)" +
                 " &7on kit &c"+kitName+" &7is not valid.");

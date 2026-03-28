@@ -1,7 +1,6 @@
 package pk.ajneb97.managers;
 
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -22,11 +21,12 @@ import pk.ajneb97.utils.OtherUtils;
 import pk.ajneb97.utils.PlayerUtils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class KitsManager {
 
     private PlayerKits2 plugin;
-    private ArrayList<Kit> kits;
+    private List<Kit> kits;
     public KitsManager(PlayerKits2 plugin){
         this.plugin = plugin;
     }
@@ -39,12 +39,12 @@ public class KitsManager {
         this.plugin = plugin;
     }
 
-    public ArrayList<Kit> getKits() {
+    public List<Kit> getKits() {
         return kits;
     }
 
-    public void setKits(ArrayList<Kit> kits) {
-        this.kits = kits;
+    public void setKits(List<Kit> kits) {
+        this.kits = new CopyOnWriteArrayList<>(kits);
     }
 
     public Kit getKitByName(String name){
@@ -57,12 +57,7 @@ public class KitsManager {
     }
 
     public void removeKit(String name){
-        for(int i=0;i<kits.size();i++){
-            if(kits.get(i).getName().equals(name)){
-                kits.remove(i);
-                return;
-            }
-        }
+        kits.removeIf(kit -> kit.getName().equals(name));
     }
 
     public void createKit(String kitName,Player player,boolean saveOriginalItems){
@@ -71,14 +66,17 @@ public class KitsManager {
         MainConfigManager mainConfigManager = plugin.getConfigsManager().getMainConfigManager();
         MessagesManager msgManager = plugin.getMessagesManager();
         if(kit != null){
-            msgManager.sendMessage(player,messagesFile.getString("kitAlreadyExists").replace("%kit%",kitName),true);
+            String msg = messagesFile.getString("kitAlreadyExists");
+            if (msg != null) {
+                msgManager.sendMessage(player,msg.replace("%kit%",kitName),true);
+            }
             return;
         }
 
         ItemStack[] inventoryContents = PlayerUtils.getAllInventoryContents(player);
 
         KitItemManager kitItemManager = plugin.getKitItemManager();
-        ArrayList<KitItem> items = new ArrayList<>();
+        List<KitItem> items = new ArrayList<>();
         boolean hasArmor = false;
         for(int i=0;i<inventoryContents.length;i++){
             ItemStack item = inventoryContents[i];
@@ -99,7 +97,7 @@ public class KitsManager {
             items.add(kitItem);
         }
 
-        if(items.size() == 0){
+        if(items.isEmpty()){
             msgManager.sendMessage(player,messagesFile.getString("inventoryEmpty"),true);
             return;
         }
@@ -111,10 +109,16 @@ public class KitsManager {
         kit.setAutoArmor(hasArmor);
         kit.setSaveOriginalItems(saveOriginalItems);
 
+        if (kits == null) {
+            kits = new CopyOnWriteArrayList<>();
+        }
         kits.add(kit);
         plugin.getConfigsManager().getKitsConfigManager().saveConfig(kit);
 
-        msgManager.sendMessage(player,messagesFile.getString("kitCreated").replace("%kit%",kitName),true);
+        String msg = messagesFile.getString("kitCreated");
+        if (msg != null) {
+            msgManager.sendMessage(player,msg.replace("%kit%",kitName),true);
+        }
 
         //Add on inventory
         InventoryManager inventoryManager = plugin.getInventoryManager();
@@ -147,7 +151,10 @@ public class KitsManager {
         plugin.getInventoryManager().removeKitFromInventory(kitName);
         plugin.getConfigsManager().getInventoryConfigManager().save();
 
-        msgManager.sendMessage(sender,messagesFile.getString("kitDeleted").replace("%kit%",kitName),true);
+        String msg = messagesFile.getString("kitDeleted");
+        if (msg != null) {
+            msgManager.sendMessage(sender,msg.replace("%kit%",kitName),true);
+        }
     }
 
     public PlayerKitsMessageResult giveKit(Player player, String kitName, GiveKitInstructions giveKitInstructions){
@@ -158,7 +165,8 @@ public class KitsManager {
         MessagesManager msgManager = plugin.getMessagesManager();
 
         if(kit == null){
-            return PlayerKitsMessageResult.error(messagesFile.getString("kitDoesNotExists").replace("%kit%",kitName));
+            String msg = messagesFile.getString("kitDoesNotExists");
+            return PlayerKitsMessageResult.error(msg != null ? msg.replace("%kit%",kitName) : "");
         }
 
         //Check properties
@@ -223,7 +231,7 @@ public class KitsManager {
 
 
         KitItemManager kitItemManager = plugin.getKitItemManager();
-        ArrayList<KitItem> items = kit.getItems();
+        List<KitItem> items = kit.getItems();
 
         //Check amount of free slots, including auto-armor
         int usedSlots = PlayerUtils.getUsedSlots(player); //storage contents, 36 slots
@@ -275,7 +283,8 @@ public class KitsManager {
             }
 
             if(item.isOffhand() && itemOffhand == null){
-                if(playerInventory.getItemInOffHand() == null || playerInventory.getItemInOffHand().getType().equals(Material.AIR) || clearInventory){
+                playerInventory.getItemInOffHand();
+                if(playerInventory.getItemInOffHand().getType().equals(Material.AIR) || clearInventory){
                     itemOffhand = item;
                     freeSlots++;
                     continue;
@@ -284,7 +293,7 @@ public class KitsManager {
 
             inventoryKitItems++;
         }
-        ArrayList<KitAction> claimActions = kit.getClaimActions();
+        List<KitAction> claimActions = kit.getClaimActions();
         for(KitAction action : claimActions){
             if(action.isCountAsItem()){
                 inventoryKitItems++;
@@ -310,15 +319,15 @@ public class KitsManager {
         for(KitItem kitItem : items){
             ItemStack item = kitItemManager.createItemFromKitItem(kitItem,player,kit);
 
-            if(itemHelmet != null && kitItem.equals(itemHelmet)){
+            if(kitItem.equals(itemHelmet)){
                 playerInventory.setHelmet(item);
-            }else if(itemChestplate != null && kitItem.equals(itemChestplate)){
+            }else if(kitItem.equals(itemChestplate)){
                 playerInventory.setChestplate(item);
-            }else if(itemLeggings != null && kitItem.equals(itemLeggings)){
+            }else if(kitItem.equals(itemLeggings)){
                 playerInventory.setLeggings(item);
-            }else if(itemBoots != null && kitItem.equals(itemBoots)){
+            }else if(kitItem.equals(itemBoots)){
                 playerInventory.setBoots(item);
-            }else if(itemOffhand != null && kitItem.equals(itemOffhand)){
+            }else if(kitItem.equals(itemOffhand)){
                 playerInventory.setItemInOffHand(item);
             }else{
                 if(playerInventory.firstEmpty() == -1 && dropItemsIfFullInventory){
@@ -417,7 +426,7 @@ public class KitsManager {
         }
     }
 
-    public void sendKitActions(ArrayList<KitAction> actions,Player player,boolean beforeItems){
+    public void sendKitActions(List<KitAction> actions,Player player,boolean beforeItems){
         for(KitAction action : actions){
             if(action.isExecuteBeforeItems() == beforeItems){
                 String actionText = action.getAction();
@@ -430,9 +439,7 @@ public class KitsManager {
         if(price != 0){
             Economy economy = plugin.getDependencyManager().getVaultEconomy();
             if(economy != null){
-                if(economy.getBalance(player) < price){
-                    return false;
-                }
+                return !(economy.getBalance(player) < price);
             }
         }
         return true;

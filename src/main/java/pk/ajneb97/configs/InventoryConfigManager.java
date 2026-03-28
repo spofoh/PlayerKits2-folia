@@ -39,10 +39,11 @@ public class InventoryConfigManager {
     public void checkClickCommands(){
         boolean needsSave = false;
         FileConfiguration config = configFile.getConfig();
-        if(config.contains("inventories")) {
+        if(config.getConfigurationSection("inventories") != null) {
             for (String key : config.getConfigurationSection("inventories").getKeys(false)) {
-                for(String slotString : config.getConfigurationSection("inventories."+key).getKeys(false)) {
-                    String path = "inventories."+key+"."+slotString;
+                if(config.getConfigurationSection("inventories."+key) != null){
+                    for(String slotString : config.getConfigurationSection("inventories."+key).getKeys(false)) {
+                        String path = "inventories."+key+"."+slotString;
                     if(config.contains(path+".click_commands")){
                         List<String> clickActions = new ArrayList<>();
                         List<String> clickCommands = config.getStringList(path+".click_commands");
@@ -59,6 +60,7 @@ public class InventoryConfigManager {
                         config.set(path+".click_actions",clickActions);
                         needsSave = true;
                     }
+                    }
                 }
             }
         }
@@ -71,16 +73,17 @@ public class InventoryConfigManager {
     public void configure(){
         FileConfiguration config = configFile.getConfig();
 
-        ArrayList<KitInventory> inventories = new ArrayList<KitInventory>();
+        ArrayList<KitInventory> inventories = new ArrayList<>();
         KitItemManager kitItemManager = plugin.getKitItemManager();
-        if(config.contains("inventories")) {
+        if(config.getConfigurationSection("inventories") != null) {
             for(String key : config.getConfigurationSection("inventories").getKeys(false)) {
                 int slots = config.getInt("inventories."+key+".slots");
                 String title = config.getString("inventories."+key+".title");
 
                 List<ItemKitInventory> items = new ArrayList<>();
-                for(String slotString : config.getConfigurationSection("inventories."+key).getKeys(false)) {
-                    if(!slotString.equals("slots") && !slotString.equals("title")) {
+                if(config.getConfigurationSection("inventories."+key) != null){
+                    for(String slotString : config.getConfigurationSection("inventories."+key).getKeys(false)) {
+                        if(!slotString.equals("slots") && !slotString.equals("title")) {
                         String path = "inventories."+key+"."+slotString;
                         KitItem item = null;
                         if(config.contains(path+".item")){
@@ -99,6 +102,7 @@ public class InventoryConfigManager {
                         ItemKitInventory itemCraft = new ItemKitInventory(slotString,item,openInventory,clickActions,type);
                         items.add(itemCraft);
                     }
+                }
                 }
 
                 KitInventory inv = new KitInventory(key,slots,title,items);

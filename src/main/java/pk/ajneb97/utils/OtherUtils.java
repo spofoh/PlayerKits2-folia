@@ -1,10 +1,8 @@
 package pk.ajneb97.utils;
 import me.clip.placeholderapi.PlaceholderAPI;
-import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.entity.Player;
 import pk.ajneb97.PlayerKits2;
-import pk.ajneb97.api.PlayerKitsAPI;
 import pk.ajneb97.managers.MessagesManager;
 
 import java.util.ArrayList;
@@ -13,28 +11,18 @@ public class OtherUtils {
 
     public static boolean isNew() {
         ServerVersion serverVersion = PlayerKits2.serverVersion;
-        if(serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_16_R1)){
-            return true;
-        }
-        return false;
+        return serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_16_R1);
     }
 
     public static boolean isLegacy() {
         ServerVersion serverVersion = PlayerKits2.serverVersion;
-        if(serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_13_R1)) {
-            return false;
-        }
-        return true;
+        return !serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_13_R1);
     }
 
     // 1.20+
     public static boolean isTrimNew() {
         ServerVersion serverVersion = PlayerKits2.serverVersion;
-        if(serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_20_R1)) {
-            return true;
-        }else {
-            return false;
-        }
+        return serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_20_R1);
     }
 
     public static String getTime(long seconds, MessagesManager msgManager) {
@@ -75,9 +63,9 @@ public class OtherUtils {
         try {
             return (Color) Color.class.getDeclaredField(colorName).get(Color.class);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            org.bukkit.plugin.java.JavaPlugin.getPlugin(pk.ajneb97.PlayerKits2.class).getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
         } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+            org.bukkit.plugin.java.JavaPlugin.getPlugin(pk.ajneb97.PlayerKits2.class).getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
         }
         return null;
     }

@@ -17,7 +17,7 @@ public class PKKitDisplayItemError extends PKBaseError{
 
     @Override
     public void sendMessage(Player player) {
-        List<String> hover = new ArrayList<String>();
+        List<String> hover = new ArrayList<>();
 
         JSONMessage jsonMessage = new JSONMessage(player,prefix+"&7Kit &c"+kitName+" &7doesn't have a default display item.");
         hover.add("&eTHIS IS AN ERROR!");

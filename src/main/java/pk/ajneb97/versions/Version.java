@@ -1,15 +1,15 @@
 package pk.ajneb97.versions;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Version {
-    private HashMap<String,Class<?>> classes;
-    private HashMap<String, Method> methods;
+    private ConcurrentHashMap<String,Class<?>> classes;
+    private ConcurrentHashMap<String, Method> methods;
 
     public Version(){
-        this.classes = new HashMap<>();
-        this.methods = new HashMap<>();
+        this.classes = new ConcurrentHashMap<>();
+        this.methods = new ConcurrentHashMap<>();
     }
 
     public void addClass(String name,Class<?> classType){

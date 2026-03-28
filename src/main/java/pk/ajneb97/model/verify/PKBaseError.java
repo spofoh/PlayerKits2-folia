@@ -23,7 +23,7 @@ public abstract class PKBaseError {
     }
 
     public List<String> getFixedErrorText(){
-        List<String> sepText = new ArrayList<String>();
+        List<String> sepText = new ArrayList<>();
         int currentPos = 0;
         for(int i=0;i<errorText.length();i++) {
             if(currentPos >= 35 && errorText.charAt(i) == ' ') {

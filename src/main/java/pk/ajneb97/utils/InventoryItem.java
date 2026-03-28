@@ -11,6 +11,7 @@ import pk.ajneb97.model.item.KitItemSkullData;
 
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class InventoryItem {
 
 	private Inventory inventory;
@@ -26,7 +27,6 @@ public class InventoryItem {
 		this.slot = slot;
 	}
 	
-	@SuppressWarnings("deprecation")
 	public InventoryItem dataValue(short datavalue) {
 		item.setDurability(datavalue);
 		return this;

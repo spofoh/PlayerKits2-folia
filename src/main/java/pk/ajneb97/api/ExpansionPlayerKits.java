@@ -2,12 +2,14 @@ package pk.ajneb97.api;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
 import pk.ajneb97.PlayerKits2;
 
+@SuppressWarnings("deprecation")
 public class ExpansionPlayerKits extends PlaceholderExpansion {
 
     // We get an instance of the plugin later.
-    private PlayerKits2 plugin;
+    private final PlayerKits2 plugin;
 
     public ExpansionPlayerKits(PlayerKits2 plugin) {
     	this.plugin = plugin;
@@ -24,22 +26,22 @@ public class ExpansionPlayerKits extends PlaceholderExpansion {
     }
 
     @Override
-    public String getAuthor(){
+    public @NonNull String getAuthor(){
         return "Ajneb97";
     }
 
     @Override
-    public String getIdentifier(){
+    public @NonNull String getIdentifier(){
         return "playerkits";
     }
 
     @Override
-    public String getVersion(){
+    public @NonNull String getVersion(){
         return plugin.getDescription().getVersion();
     }
 
     @Override
-    public String onPlaceholderRequest(Player player, String identifier){
+    public String onPlaceholderRequest(Player player, @NonNull String identifier){
 
         if(player == null){
             return "";

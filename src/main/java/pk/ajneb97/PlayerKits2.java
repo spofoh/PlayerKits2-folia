@@ -22,6 +22,7 @@ import pk.ajneb97.utils.ServerVersion;
 
 public class PlayerKits2 extends JavaPlugin {
 
+    @SuppressWarnings("deprecation")
     public String version = getDescription().getVersion();
     public static String prefix;
     public static ServerVersion serverVersion;
@@ -53,7 +54,7 @@ public class PlayerKits2 extends JavaPlugin {
         this.inventoryManager = new InventoryManager(this);
         this.inventoryEditManager = new InventoryEditManager(this);
         this.kitsManager = new KitsManager(this);
-        this.dependencyManager = new DependencyManager(this);
+        this.dependencyManager = new DependencyManager();
         this.nmsManager = new NMSManager(this);
         this.playerDataManager = new PlayerDataManager(this);
 
@@ -94,7 +95,10 @@ public class PlayerKits2 extends JavaPlugin {
     }
 
     public void registerCommands(){
-        this.getCommand("kit").setExecutor(new MainCommand(this));
+        org.bukkit.command.PluginCommand kitCommand = this.getCommand("kit");
+        if(kitCommand != null){
+            kitCommand.setExecutor(new MainCommand(this));
+        }
     }
 
     public void registerEvents() {

@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class JSONMessage {
 
 	private Player player;

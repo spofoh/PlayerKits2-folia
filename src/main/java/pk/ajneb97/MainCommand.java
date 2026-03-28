@@ -174,16 +174,16 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         PlayerDataManager playerDataManager = plugin.getPlayerDataManager();
         if(playerName.equals("*")){
             playerDataManager.resetKitForAllPlayers(kitName,result -> {
-                msgManager.sendMessage(sender, messagesConfig.getString("kitResetCorrectAll")
-                        .replace("%kit%",kitName), true);
+                String msg = messagesConfig.getString("kitResetCorrectAll");
+                if (msg != null) msgManager.sendMessage(sender, msg.replace("%kit%",kitName), true);
             });
         }else{
             PlayerKitsMessageResult result = playerDataManager.resetKitForPlayer(playerName,kitName);
             if(result.isError()){
                 msgManager.sendMessage(sender, result.getMessage(), true);
             }else{
-                msgManager.sendMessage(sender, messagesConfig.getString("kitResetCorrect")
-                        .replace("%kit%",kitName).replace("%player%",playerName), true);
+                String msg = messagesConfig.getString("kitResetCorrect");
+                if (msg != null) msgManager.sendMessage(sender, msg.replace("%kit%",kitName).replace("%player%",playerName), true);
             }
         }
     }
@@ -210,8 +210,8 @@ public class MainCommand implements CommandExecutor, TabCompleter {
 
         Player player = Bukkit.getPlayer(playerName);
         if(player == null){
-            msgManager.sendMessage(sender,messagesConfig.getString("playerNotOnline")
-                    .replace("%player%",playerName),true);
+            String msg = messagesConfig.getString("playerNotOnline");
+            if (msg != null) msgManager.sendMessage(sender,msg.replace("%player%",playerName),true);
             return;
         }
 
@@ -241,11 +241,11 @@ public class MainCommand implements CommandExecutor, TabCompleter {
 
         PlayerKitsMessageResult result = plugin.getKitsManager().giveKit(player,kitName,new GiveKitInstructions(true,false,false,false));
         if(result.isError()){
-            msgManager.sendMessage(sender,messagesConfig.getString("commandGiveError2")
-                    .replace("%error%",result.getMessage()),true);
+            String msg = messagesConfig.getString("commandGiveError2");
+            if (msg != null) msgManager.sendMessage(sender,msg.replace("%error%",result.getMessage()),true);
         }else{
-            msgManager.sendMessage(sender,messagesConfig.getString("commandGiveCorrect")
-                    .replace("%kit%",kitName).replace("%player%",args[2]),true);
+            String msg = messagesConfig.getString("commandGiveCorrect");
+            if (msg != null) msgManager.sendMessage(sender,msg.replace("%kit%",kitName).replace("%player%",args[2]),true);
         }
     }
 
@@ -275,8 +275,8 @@ public class MainCommand implements CommandExecutor, TabCompleter {
 
         Kit kit = plugin.getKitsManager().getKitByName(args[1]);
         if(kit == null){
-            msgManager.sendMessage(sender,messagesConfig.getString("kitDoesNotExists")
-                    .replace("%kit%",args[1]),true);
+            String msg = messagesConfig.getString("kitDoesNotExists");
+            if (msg != null) msgManager.sendMessage(sender,msg.replace("%kit%",args[1]),true);
             return;
         }
 
@@ -290,13 +290,13 @@ public class MainCommand implements CommandExecutor, TabCompleter {
 
             player = Bukkit.getPlayer(args[2]);
             if(player == null){
-                msgManager.sendMessage(sender,messagesConfig.getString("playerNotOnline")
-                        .replace("%player%",args[2]),true);
+                String msg = messagesConfig.getString("playerNotOnline");
+                if (msg != null) msgManager.sendMessage(sender,msg.replace("%player%",args[2]),true);
                 return;
             }
 
-            msgManager.sendMessage(sender,messagesConfig.getString("commandPreviewOtherCorrect")
-                    .replace("%kit%",args[1]).replace("%player%",args[2]),true);
+            String msg2 = messagesConfig.getString("commandPreviewOtherCorrect");
+            if (msg2 != null) msgManager.sendMessage(sender,msg2.replace("%kit%",args[1]).replace("%player%",args[2]),true);
         }else{
             if(kit.isPermissionRequired()){
                 if(mainConfigManager.isKitPreviewRequiresKitPermission() && !kit.playerHasPermission(sender)){
@@ -333,7 +333,10 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                 plugin.getInventoryManager().openInventory(inventoryPlayer);
                 return;
             }
-            msgManager.sendMessage(player,messagesConfig.getString("kitReceived").replace("%kit%",kitName),true);
+            String msg = messagesConfig.getString("kitReceived");
+            if (msg != null) {
+                msgManager.sendMessage(player,msg.replace("%kit%",kitName),true);
+            }
         }
     }
 
@@ -392,8 +395,8 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         }
 
         if(plugin.getKitsManager().getKitByName(args[1]) == null){
-            msgManager.sendMessage(player,messagesConfig.getString("kitDoesNotExists")
-                    .replace("%kit%",args[1]),true);
+            String msg = messagesConfig.getString("kitDoesNotExists");
+            if (msg != null) msgManager.sendMessage(player,msg.replace("%kit%",args[1]),true);
             return;
         }
 
@@ -409,8 +412,8 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         boolean claimKitShortCommand = mainConfigManager.isClaimKitShortCommand();
         boolean kitPreviewEnabled = mainConfigManager.isKitPreview();
 
-        List<String> completions = new ArrayList<String>();
-        List<String> commands = new ArrayList<String>();
+        List<String> completions = new ArrayList<>();
+        List<String> commands = new ArrayList<>();
 
         if(args.length == 1) {
             if(claimKitShortCommand){
@@ -488,7 +491,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
         String argKit = args[argKitPos];
 
-        ArrayList<Kit> kits = plugin.getKitsManager().getKits();
+        List<Kit> kits = plugin.getKitsManager().getKits();
         for(Kit kit : kits) {
             if(argKit.isEmpty() || kit.getName().toLowerCase().startsWith(argKit.toLowerCase())) {
                 if(kit.playerHasPermission(sender)){
@@ -507,7 +510,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
         String argInv = args[argInvPos];
 
-        ArrayList<KitInventory> inventories = plugin.getInventoryManager().getInventories();
+        List<KitInventory> inventories = plugin.getInventoryManager().getInventories();
         for(KitInventory inv : inventories) {
             if((argInv.isEmpty() || inv.getName().toLowerCase().startsWith(argInv.toLowerCase()))
                 && !inv.getName().equals("preview_inventory") && !inv.getName().equals("buy_requirements_inventory")) {

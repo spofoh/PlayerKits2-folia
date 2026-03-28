@@ -36,7 +36,7 @@ public class InventoryEditRequirementsManager {
         KitRequirements kitRequirements = kit.getRequirements();
 
         //Set Price
-        List<String> lore = new ArrayList<String>();
+        List<String> lore = new ArrayList<>();
         lore.add("&7Click to define the price of");
         lore.add("&7the kit. Requires Vault and an");
         lore.add("&7economy plugin.");
@@ -49,7 +49,7 @@ public class InventoryEditRequirementsManager {
         new InventoryItem(inv, 11, Material.EMERALD).name("&eSet &6&lPrice").lore(lore).ready();
 
         //Set Auto Armor
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to enable/disable whether players");
         lore.add("&7must accomplish the requirements of this");
         lore.add("&7kit only once.");
@@ -62,7 +62,7 @@ public class InventoryEditRequirementsManager {
         new InventoryItem(inv, 13, Material.GHAST_TEAR).name("&eSet &6&lOne Time Requirements").lore(lore).ready();
 
         //Set Extra Requirements
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to add/edit extra requirements.");
         lore.add("");
         lore.add("&cThis feature is not available yet on");
@@ -111,7 +111,9 @@ public class InventoryEditRequirementsManager {
                 plugin.getConfigsManager().getKitsConfigManager().saveConfig(kit);
                 return;
             }
-        }catch(Exception e){}
+        }catch(Exception e){
+            // Ignored, not a valid number
+        }
         player.sendMessage(MessagesManager.getLegacyColoredMessage(PlayerKits2.prefix+"&cYou must use a valid number."));
     }
 

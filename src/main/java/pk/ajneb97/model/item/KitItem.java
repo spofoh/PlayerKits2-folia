@@ -8,6 +8,7 @@ import pk.ajneb97.utils.ItemUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class KitItem{
 
     private String id;

@@ -18,6 +18,7 @@ import pk.ajneb97.utils.OtherUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class InventoryEditActionsEditManager {
 
     private PlayerKits2 plugin;
@@ -86,7 +87,7 @@ public class InventoryEditActionsEditManager {
         } else {
             headMaterial = Material.PLAYER_HEAD;
         }
-        lore = new ArrayList<String>();
+        lore = new ArrayList<>();
         lore.add("&7Click to edit the display item for");
         lore.add("&7this action.");
         lore.add("");

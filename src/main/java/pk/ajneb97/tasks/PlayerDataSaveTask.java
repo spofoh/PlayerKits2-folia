@@ -1,7 +1,7 @@
 package pk.ajneb97.tasks;
 
-import org.bukkit.scheduler.BukkitRunnable;
 import pk.ajneb97.PlayerKits2;
+import pk.ajneb97.utils.TaskUtils;
 
 public class PlayerDataSaveTask {
 
@@ -19,17 +19,15 @@ public class PlayerDataSaveTask {
 	public void start(int seconds) {
 		long ticks = seconds* 20L;
 		
-		new BukkitRunnable() {
-			@Override
-			public void run() {
-				if(end) {
-					this.cancel();
-				}else {
-					execute();
-				}
+		TaskUtils.runAsyncTimer(plugin, () -> {
+			if(end) {
+				// Can't cancel a lambda this easily, but `end` check stops execution
+				// Although it keeps running empty, so we should just return
+				return;
+			}else {
+				execute();
 			}
-			
-		}.runTaskTimerAsynchronously(plugin, 0L, ticks);
+		}, 0L, ticks);
 	}
 	
 	public void execute() {

@@ -40,10 +40,10 @@ import org.bukkit.profile.PlayerTextures;
 import pk.ajneb97.PlayerKits2;
 import pk.ajneb97.model.item.*;
 
+@SuppressWarnings({"deprecation", "removal"})
 public class ItemUtils {
 
 
-	@SuppressWarnings("deprecation")
 	public static ItemStack createItemFromID(String id) {
 		String[] idsplit = new String[2];
 		int DataValue = 0;
@@ -51,11 +51,13 @@ public class ItemUtils {
 		if(id.contains(":")){
 			  idsplit = id.split(":");
 			  String stringDataValue = idsplit[1];
-			  DataValue = Integer.valueOf(stringDataValue);
+			  DataValue = Integer.parseInt(stringDataValue);
 			  Material mat = Material.getMaterial(idsplit[0].toUpperCase()); 
+			  if (mat == null) mat = Material.STONE;
 			  stack = new ItemStack(mat,1,(short)DataValue);	             	  
 		}else{
 			  Material mat = Material.getMaterial(id.toUpperCase());
+			  if (mat == null) mat = Material.STONE;
 			  stack = new ItemStack(mat,1);	  			  
 		}
 		return stack;
@@ -108,7 +110,7 @@ public class ItemUtils {
 					PlayerTextures textures = profile.getTextures();
 					if(textures != null){
 						JsonObject skinJsonObject = new JsonObject();
-						skinJsonObject.addProperty("url", textures.getSkin().toString());
+						if(textures.getSkin() != null) skinJsonObject.addProperty("url", textures.getSkin().toString());
 						JsonObject texturesJsonObject = new JsonObject();
 						texturesJsonObject.add("SKIN", skinJsonObject);
 						JsonObject minecraftTexturesJsonObject = new JsonObject();
@@ -146,7 +148,7 @@ public class ItemUtils {
 				}
 			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException
 					 | InvocationTargetException | NoSuchMethodException e) {
-				e.printStackTrace();
+				org.bukkit.plugin.java.JavaPlugin.getPlugin(pk.ajneb97.PlayerKits2.class).getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
 			}
 		}
 
@@ -194,7 +196,7 @@ public class ItemUtils {
 
 					url = new URL(urlText);
 				} catch (Exception error) {
-					error.printStackTrace();
+					org.bukkit.plugin.java.JavaPlugin.getPlugin(pk.ajneb97.PlayerKits2.class).getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", error);
 					return;
 				}
 				textures.setSkin(url);
@@ -214,7 +216,7 @@ public class ItemUtils {
 					profileField.setAccessible(true);
 					profileField.set(skullMeta, profile);
 				} catch (IllegalArgumentException | NoSuchFieldException | SecurityException | IllegalAccessException error) {
-					error.printStackTrace();
+					org.bukkit.plugin.java.JavaPlugin.getPlugin(pk.ajneb97.PlayerKits2.class).getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", error);
 				}
 			}
 		}
@@ -224,7 +226,7 @@ public class ItemUtils {
 	
 	public static KitItemPotionData getPotionData(ItemStack item) {
 		KitItemPotionData potionData = null;
-		List<String> potionEffectsList = new ArrayList<String>();
+		List<String> potionEffectsList = new ArrayList<>();
 		boolean upgraded = false;
 		boolean extended = false;
 		String potionType = null;
@@ -251,7 +253,7 @@ public class ItemUtils {
 		}
 		ServerVersion serverVersion = PlayerKits2.serverVersion;
 		if(serverVersion.serverVersionGreaterEqualThan(serverVersion,ServerVersion.v1_9_R1)) {
-			if(meta.hasColor()) {
+			if(meta.hasColor() && meta.getColor() != null) {
 				potionColor = meta.getColor().asRGB();
 			}
 
@@ -261,9 +263,11 @@ public class ItemUtils {
 				}
 			}else{
 				PotionData basePotionData = meta.getBasePotionData();
-				extended = basePotionData.isExtended();
-				upgraded = basePotionData.isUpgraded();
-				potionType = basePotionData.getType().name();
+				if(basePotionData != null) {
+					extended = basePotionData.isExtended();
+					upgraded = basePotionData.isUpgraded();
+					potionType = basePotionData.getType().name();
+				}
 			}
 		}
 		
@@ -293,9 +297,12 @@ public class ItemUtils {
 			for(int i=0;i<potionEffects.size();i++) {
 				String[] sep = potionEffects.get(i).split(";");
 				String type = sep[0];
-				int amplifier = Integer.valueOf(sep[1]);
-				int duration = Integer.valueOf(sep[2]);
-				meta.addCustomEffect(new PotionEffect(PotionEffectType.getByName(type),duration,amplifier), false);
+				int amplifier = Integer.parseInt(sep[1]);
+				int duration = Integer.parseInt(sep[2]);
+				PotionEffectType effectType = PotionEffectType.getByName(type);
+				if(effectType != null) {
+					meta.addCustomEffect(new PotionEffect(effectType,duration,amplifier), false);
+				}
 			}
 		}
 
@@ -324,15 +331,14 @@ public class ItemUtils {
 	
 	public static KitItemBannerData getBannerData(ItemStack item) {
 		KitItemBannerData bannerData = null;
-		List<String> bannerPatterns = new ArrayList<String>();
+		List<String> bannerPatterns = new ArrayList<>();
 		String baseColor = null;
 		
-		List<Pattern> patterns = new ArrayList<Pattern>();
+		List<Pattern> patterns = new ArrayList<>();
 		
 		String typeName = item.getType().name();
 		if(typeName.contains("BANNER") || typeName.contains("PATTERN")) {
-			if(item.getItemMeta() instanceof BannerMeta) {
-				BannerMeta meta = (BannerMeta) item.getItemMeta();
+			if(item.getItemMeta() instanceof BannerMeta meta) {
 				patterns = meta.getPatterns();
 			}
 		}else if(typeName.equals("SHIELD")) {
@@ -409,13 +415,13 @@ public class ItemUtils {
 	public static KitItemFireworkData getFireworkData(ItemStack item) {
 		KitItemFireworkData fireworkData = null;
 		
-		List<String> fireworkRocketEffects = new ArrayList<String>();
+		List<String> fireworkRocketEffects = new ArrayList<>();
 		String fireworkStarEffect = null;
 		int fireworkPower = 0;
 		
 		String typeName = item.getType().name();
 		boolean isFireworkCharge = false;
-		List<FireworkEffect> effects = new ArrayList<FireworkEffect>();
+		List<FireworkEffect> effects = new ArrayList<>();
 		
 		if(typeName.equals("FIREWORK") || typeName.equals("FIREWORK_ROCKET")) {
 			FireworkMeta meta = (FireworkMeta) item.getItemMeta();
@@ -502,20 +508,20 @@ public class ItemUtils {
 		String[] sep = line.split(";");
 		String type = sep[0];
 		String[] colors = sep[1].split(",");
-		List<Color> colorsList = new ArrayList<Color>();
+		List<Color> colorsList = new ArrayList<>();
 		for(int c=0;c<colors.length;c++) {
-			colorsList.add(Color.fromRGB(Integer.valueOf(colors[c])));
+			colorsList.add(Color.fromRGB(Integer.parseInt(colors[c])));
 		}
-		List<Color> fadeColorsList = new ArrayList<Color>();
+		List<Color> fadeColorsList = new ArrayList<>();
 		if(!sep[2].equals("")) {
 			String[] fadeColors = sep[2].split(",");
 			for(int c=0;c<fadeColors.length;c++) {
-				fadeColorsList.add(Color.fromRGB(Integer.valueOf(fadeColors[c])));
+				fadeColorsList.add(Color.fromRGB(Integer.parseInt(fadeColors[c])));
 			} 
 		}
 
-		boolean flicker = Boolean.valueOf(sep[3]);
-		boolean trail = Boolean.valueOf(sep[4]);
+		boolean flicker = Boolean.parseBoolean(sep[3]);
+		boolean trail = Boolean.parseBoolean(sep[4]);
 		return FireworkEffect.builder().flicker(flicker).trail(trail).with(Type.valueOf(type))
 				.withColor(colorsList).withFade(fadeColorsList).build();
 	}
@@ -531,6 +537,7 @@ public class ItemUtils {
 			ItemMeta meta = item.getItemMeta();
 			if(meta.hasAttributeModifiers()) {
 				Multimap<Attribute,AttributeModifier> attributes = meta.getAttributeModifiers();
+				if(attributes == null) return null;
 				Set<Attribute> set = attributes.keySet();
 
 				List<String> attributeList = new ArrayList<>();
@@ -577,14 +584,15 @@ public class ItemUtils {
 					String[] sep = a.split(";");
 					String attribute = sep[0];
 					AttributeModifier.Operation op = AttributeModifier.Operation.valueOf(sep[1]);
-					double amount = Double.valueOf(sep[2]);
+					double amount = Double.parseDouble(sep[2]);
 
 					AttributeModifier modifier = null;
 
 					if(newSystem){
 						String[] id = sep[3].split(":");
 						NamespacedKey namespacedKey = new NamespacedKey(id[0],id[1]);
-						modifier = new AttributeModifier(namespacedKey,amount,op,EquipmentSlotGroup.getByName(sep[4]));
+						EquipmentSlotGroup group = EquipmentSlotGroup.getByName(sep[4]);
+						modifier = new AttributeModifier(namespacedKey,amount,op,group != null ? group : EquipmentSlotGroup.ANY);
 					}else{
 						String customName = attribute;
 						for(int i=0;i<sep.length;i++){
@@ -635,7 +643,7 @@ public class ItemUtils {
 		KitItemBookData bookData = null;
 		String typeName = item.getType().name();
 		
-		List<String> pages = new ArrayList<String>();
+		List<String> pages = new ArrayList<>();
 		String author = null;
 		String generation = null;
 		String title = null;
@@ -681,7 +689,7 @@ public class ItemUtils {
 			if(!Bukkit.getVersion().contains("1.12") && OtherUtils.isLegacy()) {
 				meta.setPages(new ArrayList<String>(pages));
 			}else {
-				ArrayList<BaseComponent[]> pagesBaseComponent = new ArrayList<BaseComponent[]>();
+				ArrayList<BaseComponent[]> pagesBaseComponent = new ArrayList<>();
 				for(String page : pages) {
 					pagesBaseComponent.add(ComponentSerializer.parse(page));
 				}
@@ -704,12 +712,13 @@ public class ItemUtils {
 
 		String armorTrimPattern = null;
 		String armorTrimMaterial = null;
-		if(item.getItemMeta() instanceof ArmorMeta) {
-			ArmorMeta meta = (ArmorMeta) item.getItemMeta();
+		if(item.getItemMeta() instanceof ArmorMeta meta) {
 			if(meta.hasTrim()){
 				ArmorTrim armorTrim = meta.getTrim();
-				armorTrimPattern = armorTrim.getPattern().getKey().getKey();
-				armorTrimMaterial = armorTrim.getMaterial().getKey().getKey();
+				if(armorTrim != null){
+					armorTrimPattern = armorTrim.getPattern().getKey().getKey();
+					armorTrimMaterial = armorTrim.getMaterial().getKey().getKey();
+				}
 			}else{
 				return null;
 			}
@@ -728,15 +737,15 @@ public class ItemUtils {
 		String pattern = trimData.getPattern();
 		String material = trimData.getMaterial();
 
-		if(item.getItemMeta() instanceof ArmorMeta) {
-			ArmorMeta meta = (ArmorMeta) item.getItemMeta();
+		if(item.getItemMeta() instanceof ArmorMeta meta) {
 			if(pattern != null && material != null){
-				ArmorTrim armorTrim = new ArmorTrim(
-						Registry.TRIM_MATERIAL.get(NamespacedKey.minecraft(material.toLowerCase())),
-						Registry.TRIM_PATTERN.get(NamespacedKey.minecraft(pattern.toLowerCase()))
-				);
-				meta.setTrim(armorTrim);
-				item.setItemMeta(meta);
+				org.bukkit.inventory.meta.trim.TrimMaterial tMat = Registry.TRIM_MATERIAL.get(NamespacedKey.minecraft(material.toLowerCase()));
+				org.bukkit.inventory.meta.trim.TrimPattern tPat = Registry.TRIM_PATTERN.get(NamespacedKey.minecraft(pattern.toLowerCase()));
+				if(tMat != null && tPat != null){
+					ArmorTrim armorTrim = new ArmorTrim(tMat, tPat);
+					meta.setTrim(armorTrim);
+					item.setItemMeta(meta);
+				}
 			}
 		}
 	}

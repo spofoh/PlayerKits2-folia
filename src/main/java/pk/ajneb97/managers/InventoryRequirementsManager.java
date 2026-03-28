@@ -16,6 +16,7 @@ import pk.ajneb97.utils.PlayerUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class InventoryRequirementsManager {
 
     private PlayerKits2 plugin;

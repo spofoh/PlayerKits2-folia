@@ -19,6 +19,7 @@ import pk.ajneb97.utils.OtherUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation")
 public class InventoryEditDisplayManager {
 
     private PlayerKits2 plugin;
@@ -171,22 +172,18 @@ public class InventoryEditDisplayManager {
             return kitAction.getDisplayItem();
         }else{
             KitItem kitItem = kit.getDisplayItemDefault();
-            switch(type){
-                case "permission":
-                    return kit.getDisplayItemNoPermission();
-                case "onetime":
-                    return kit.getDisplayItemOneTime();
-                case "cooldown":
-                    return kit.getDisplayItemCooldown();
-                case "requirements":
-                    return kit.getDisplayItemOneTimeRequirements();
-            }
-            return kitItem;
+            return switch(type){
+                case "permission" -> kit.getDisplayItemNoPermission();
+                case "onetime" -> kit.getDisplayItemOneTime();
+                case "cooldown" -> kit.getDisplayItemCooldown();
+                case "requirements" -> kit.getDisplayItemOneTimeRequirements();
+                default -> kitItem;
+            };
         }
     }
 
-    public ArrayList<KitAction> getKitActionsFromType(Kit kit,String type){
-        ArrayList<KitAction> actions = null;
+    public List<KitAction> getKitActionsFromType(Kit kit,String type){
+        List<KitAction> actions = null;
         if(type.equals("claim")){
             actions = kit.getClaimActions();
         }else{

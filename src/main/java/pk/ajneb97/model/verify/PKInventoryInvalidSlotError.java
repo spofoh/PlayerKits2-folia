@@ -21,7 +21,7 @@ public class PKInventoryInvalidSlotError extends PKBaseError{
 
     @Override
     public void sendMessage(Player player) {
-        List<String> hover = new ArrayList<String>();
+        List<String> hover = new ArrayList<>();
 
         JSONMessage jsonMessage = new JSONMessage(player,prefix+"&7Inventory &c"+inventoryName+" &7has an item on an invalid slot");
         hover.add("&eTHIS IS AN ERROR!");

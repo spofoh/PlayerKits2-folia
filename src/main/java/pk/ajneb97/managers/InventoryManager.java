@@ -22,26 +22,27 @@ import pk.ajneb97.model.item.KitItem;
 import pk.ajneb97.utils.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+@SuppressWarnings("deprecation")
 public class InventoryManager {
 
     private PlayerKits2 plugin;
-    private ArrayList<KitInventory> inventories;
-    private ArrayList<InventoryPlayer> players;
+    private List<KitInventory> inventories;
+    private List<InventoryPlayer> players;
     private InventoryRequirementsManager inventoryRequirementsManager;
     public InventoryManager(PlayerKits2 plugin){
         this.plugin = plugin;
-        this.players = new ArrayList<>();
+        this.players = new CopyOnWriteArrayList<>();
         this.inventoryRequirementsManager = new InventoryRequirementsManager(plugin,this);
     }
 
-    public ArrayList<InventoryPlayer> getPlayers() {
+    public List<InventoryPlayer> getPlayers() {
         return players;
     }
 
-    public ArrayList<KitInventory> getInventories() {
+    public List<KitInventory> getInventories() {
         return inventories;
     }
 
@@ -49,8 +50,8 @@ public class InventoryManager {
         return inventoryRequirementsManager;
     }
 
-    public void setInventories(ArrayList<KitInventory> inventories) {
-        this.inventories = inventories;
+    public void setInventories(List<KitInventory> inventories) {
+        this.inventories = new CopyOnWriteArrayList<>(inventories);
     }
 
     public KitInventory getInventory(String name){
@@ -141,14 +142,7 @@ public class InventoryManager {
     private ItemStack setItemActions(ItemKitInventory itemInventory, ItemStack item) {
         List<String> clickActions = itemInventory.getClickActions();
         if(clickActions != null && !clickActions.isEmpty()) {
-            String actionsList = "";
-            for(int i=0;i<clickActions.size();i++) {
-                if(i==clickActions.size()-1) {
-                    actionsList=actionsList+clickActions.get(i);
-                }else {
-                    actionsList=actionsList+clickActions.get(i)+"|";
-                }
-            }
+            String actionsList = String.join("|", clickActions);
             item = ItemUtils.setTagStringItem(plugin, item, "playerkits_item_actions", actionsList);
         }
         return item;
@@ -164,8 +158,7 @@ public class InventoryManager {
         }
 
         // Create a list with all items including actions display items
-        ArrayList<KitItem> allItems = new ArrayList<>();
-        allItems.addAll(kit.getItems());
+        ArrayList<KitItem> allItems = new ArrayList<>(kit.getItems());
         for(KitAction kitAction : kit.getClaimActions()){
             KitItem kitItem = kitAction.getDisplayItem();
             if(kitItem != null){
@@ -236,7 +229,10 @@ public class InventoryManager {
             Kit kit = plugin.getKitsManager().getKitByName(kitName);
             if(kit.isPermissionRequired()){
                 if(mainConfigManager.isKitPreviewRequiresKitPermission() && !kit.playerHasPermission(player)){
-                    msgManager.sendMessage(player,messagesConfig.getString("cantPreviewError"),true);
+                    String msg = messagesConfig.getString("cantPreviewError");
+                    if (msg != null) {
+                        msgManager.sendMessage(player,msg,true);
+                    }
                     return;
                 }
             }
@@ -262,7 +258,10 @@ public class InventoryManager {
                 openInventory(inventoryPlayer);
                 return;
             }
-            msgManager.sendMessage(player,messagesConfig.getString("kitReceived").replace("%kit%",kitName),true);
+            String msg = messagesConfig.getString("kitReceived");
+            if (msg != null) {
+                msgManager.sendMessage(player,msg.replace("%kit%",kitName),true);
+            }
         }
 
         if(mainConfigManager.isCloseInventoryOnClaim()){
@@ -406,12 +405,8 @@ public class InventoryManager {
     public void removeKitFromInventory(String kitName){
         for(KitInventory inventory : inventories){
             List<ItemKitInventory> items = inventory.getItems();
-            for(int i=0;i<items.size();i++){
-                ItemKitInventory item = items.get(i);
-                if(item.getType() != null && item.getType().equals("kit: "+kitName)){
-                    items.remove(i);
-                    i--;
-                }
+            if (items != null) {
+                items.removeIf(item -> item.getType() != null && item.getType().equals("kit: " + kitName));
             }
         }
     }

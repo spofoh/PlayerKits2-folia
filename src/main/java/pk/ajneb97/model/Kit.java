@@ -5,6 +5,7 @@ import pk.ajneb97.model.item.KitItem;
 import pk.ajneb97.utils.PlayerUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Kit {
     private String name;
@@ -13,9 +14,9 @@ public class Kit {
     private boolean clearInventory;
     private String customPermission;
     private boolean oneTime;
-    private ArrayList<KitItem> items;
-    private ArrayList<KitAction> claimActions;
-    private ArrayList<KitAction> errorActions;
+    private List<KitItem> items;
+    private List<KitAction> claimActions;
+    private List<KitAction> errorActions;
     private boolean saveOriginalItems;
     private boolean allowPlaceholdersOnOriginalItems;
 
@@ -61,11 +62,11 @@ public class Kit {
         this.permissionRequired = permissionRequired;
     }
 
-    public ArrayList<KitItem> getItems() {
+    public List<KitItem> getItems() {
         return items;
     }
 
-    public void setItems(ArrayList<KitItem> items) {
+    public void setItems(List<KitItem> items) {
         this.items = items;
     }
 
@@ -109,19 +110,19 @@ public class Kit {
         this.oneTime = oneTime;
     }
 
-    public ArrayList<KitAction> getClaimActions() {
+    public List<KitAction> getClaimActions() {
         return claimActions;
     }
 
-    public void setClaimActions(ArrayList<KitAction> claimActions) {
+    public void setClaimActions(List<KitAction> claimActions) {
         this.claimActions = claimActions;
     }
 
-    public ArrayList<KitAction> getErrorActions() {
+    public List<KitAction> getErrorActions() {
         return errorActions;
     }
 
-    public void setErrorActions(ArrayList<KitAction> errorActions) {
+    public void setErrorActions(List<KitAction> errorActions) {
         this.errorActions = errorActions;
     }
 

@@ -28,7 +28,7 @@ public class HikariConnection {
         if(config.contains(path+".pool.maximumPoolSize")){
             hikariConfig.setMaximumPoolSize(config.getInt(path+".pool.maximumPoolSize"));
         }
-        if(config.contains(path+".pool.connectionTimeout")){
+        if(config.contains(path+".pool.keepaliveTime")){
             hikariConfig.setKeepaliveTime(config.getLong(path+".pool.keepaliveTime"));
         }
         if(config.contains(path+".pool.idleTimeout")){
@@ -38,8 +38,11 @@ public class HikariConnection {
             hikariConfig.setMaxLifetime(config.getLong(path+".pool.maxLifetime"));
         }
 
-        for(String key : config.getConfigurationSection(path+".advanced").getKeys(false)){
-            hikariConfig.addDataSourceProperty(key,config.get(path+".advanced."+key));
+        org.bukkit.configuration.ConfigurationSection advancedSection = config.getConfigurationSection(path+".advanced");
+        if(advancedSection != null){
+            for(String key : advancedSection.getKeys(false)){
+                hikariConfig.addDataSourceProperty(key,config.get(path+".advanced."+key));
+            }
         }
 
         hikari = new HikariDataSource(hikariConfig);
