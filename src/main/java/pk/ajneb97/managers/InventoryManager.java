@@ -30,7 +30,8 @@ public class InventoryManager {
 
     private PlayerKits2 plugin;
     private List<KitInventory> inventories;
-    private List<InventoryPlayer> players;
+    private final List<InventoryPlayer> players;
+
     private InventoryRequirementsManager inventoryRequirementsManager;
     public InventoryManager(PlayerKits2 plugin){
         this.plugin = plugin;

@@ -29,28 +29,26 @@ public class InventoryUpdateTaskManager {
         PlayerDataManager playerDataManager = plugin.getPlayerDataManager();
         KitItemManager kitItemManager = plugin.getKitItemManager();
 
-        ArrayList<InventoryPlayer> players = new ArrayList<>(inventoryManager.getPlayers());
-        for(InventoryPlayer player : players){
+        for (InventoryPlayer player : inventoryManager.getPlayers()) {
+            if (player == null || player.getPlayer() == null) continue;
+
             TaskUtils.runEntity(plugin, player.getPlayer(), () -> {
-                if(!inventoryManager.getPlayers().contains(player)){
+                if (!inventoryManager.getPlayers().contains(player) || !player.getPlayer().isOnline()) {
                     return;
                 }
-                
+
                 Inventory inv = InventoryUtils.getTopInventory(player.getPlayer());
-                if(inv == null){
-                    return;
-                }
+                if (inv == null) return;
+
                 ItemStack[] contents = inv.getContents();
-                for(int i=0;i<contents.length;i++){
+                for (int i = 0; i < contents.length; i++) {
                     ItemStack item = contents[i];
-                    if(item == null || item.getType().equals(Material.AIR)){
-                        continue;
-                    }
-    
-                    String kitName = ItemUtils.getTagStringItem(plugin,item,"playerkits_kit");
-                    if(kitName != null){
-                        inventoryManager.setKit(kitName,player.getPlayer(),inv,i,kitsManager,
-                                playerDataManager,kitItemManager,item);
+                    if (item == null || item.getType().equals(Material.AIR)) continue;
+
+                    String kitName = ItemUtils.getTagStringItem(plugin, item, "playerkits_kit");
+                    if (kitName != null) {
+                        inventoryManager.setKit(kitName, player.getPlayer(), inv, i, kitsManager,
+                                playerDataManager, kitItemManager, item);
                     }
                 }
             });
