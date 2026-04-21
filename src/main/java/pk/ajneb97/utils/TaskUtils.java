@@ -1,6 +1,7 @@
 package pk.ajneb97.utils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -70,5 +71,13 @@ public class TaskUtils {
         } else {
             Bukkit.getScheduler().runTaskLater(plugin, runnable, delayTicks);
         }
+    }
+
+    public static void runCommandSender(JavaPlugin plugin, CommandSender sender, Runnable runnable) {
+        if (isFolia() && sender instanceof Entity entity) {
+            runEntity(plugin, entity, runnable);
+            return;
+        }
+        runSync(plugin, runnable);
     }
 }

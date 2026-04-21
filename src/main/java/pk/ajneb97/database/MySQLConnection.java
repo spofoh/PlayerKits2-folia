@@ -108,10 +108,7 @@ public class MySQLConnection {
                     }
                 }
 
-                PlayerData finalPlayer = player;
-                TaskUtils.runSync(plugin, () -> {
-                    callback.onDone(finalPlayer);
-                });
+                callback.onDone(player);
             } catch (SQLException e) {
                 plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
             }
@@ -129,9 +126,7 @@ public class MySQLConnection {
                 statement.setString(2, player.getName());
                 statement.executeUpdate();
 
-                TaskUtils.runSync(plugin, () -> {
-                    callback.onDone();
-                });
+                callback.onDone();
             } catch (SQLException e) {
                 plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
             }

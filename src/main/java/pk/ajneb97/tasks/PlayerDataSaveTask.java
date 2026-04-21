@@ -6,7 +6,7 @@ import pk.ajneb97.utils.TaskUtils;
 public class PlayerDataSaveTask {
 
 	private PlayerKits2 plugin;
-	private boolean end;
+	private volatile boolean end;
 	public PlayerDataSaveTask(PlayerKits2 plugin) {
 		this.plugin = plugin;
 		this.end = false;

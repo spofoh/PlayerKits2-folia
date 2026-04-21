@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class KitsManager {
 
     private PlayerKits2 plugin;
-    private List<Kit> kits;
+    private volatile List<Kit> kits;
     public KitsManager(PlayerKits2 plugin){
         this.plugin = plugin;
     }

@@ -27,7 +27,7 @@ public class MigrationManager {
             migrateKits(sender);
             migratePlayers(sender);
 
-            sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aMigration completed."));
+            sendMessage(sender, PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aMigration completed."));
         });
     }
 
@@ -35,7 +35,7 @@ public class MigrationManager {
         File bStatsFolder = new File(plugin.getDataFolder().getParentFile(), "PlayerKits");
         File configFile = new File(bStatsFolder, "kits.yml");
         if(!configFile.exists()){
-            sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cPlayerKits1 kits.yml file not found."));
+            sendMessage(sender, PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cPlayerKits1 kits.yml file not found."));
             return;
         }
 
@@ -98,15 +98,15 @@ public class MigrationManager {
 
                     kitsConfigManager.saveConfig(kit);
 
-                    sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aKit &7"+kitName+" &amigrated."));
+                    sendMessage(sender, PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aKit &7"+kitName+" &amigrated."));
                 }catch(Exception e){
-                    sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cError while trying to migrate kit &7"+kitName+"&c, check console."));
+                    sendMessage(sender, PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cError while trying to migrate kit &7"+kitName+"&c, check console."));
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
                 }
 
             }
         }else{
-            sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cNo kits found."));
+            sendMessage(sender, PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cNo kits found."));
             return;
         }
 
@@ -118,7 +118,7 @@ public class MigrationManager {
         File bStatsFolder = new File(plugin.getDataFolder().getParentFile(), "PlayerKits");
         File configFile = new File(bStatsFolder, "players.yml");
         if(!configFile.exists()){
-            sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cPlayerKits1 players.yml file not found."));
+            sendMessage(sender, PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &cPlayerKits1 players.yml file not found."));
             return;
         }
 
@@ -149,15 +149,19 @@ public class MigrationManager {
 
                     playersConfigManager.saveConfig(playerData);
 
-                    sender.sendMessage(PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aPlayer &7"+name+" &amigrated."));
+                    sendMessage(sender, PlayerKits2.prefix+MessagesManager.getLegacyColoredMessage(" &aPlayer &7"+name+" &amigrated."));
                 } catch (Exception e) {
-                    sender.sendMessage(PlayerKits2.prefix + MessagesManager.getLegacyColoredMessage(" &cError while trying to migrate player data with uuid &7" + uuid + "&c, check console."));
+                    sendMessage(sender, PlayerKits2.prefix + MessagesManager.getLegacyColoredMessage(" &cError while trying to migrate player data with uuid &7" + uuid + "&c, check console."));
                     plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
                 }
             }
         }
 
         playersConfigManager.configure();
+    }
+
+    private void sendMessage(CommandSender sender, String message) {
+        TaskUtils.runCommandSender(plugin, sender, () -> sender.sendMessage(message));
     }
 
     public KitItem getDisplayItem(YamlConfiguration config,String path){

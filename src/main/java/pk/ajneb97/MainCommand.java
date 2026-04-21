@@ -16,6 +16,7 @@ import pk.ajneb97.model.internal.PlayerKitsMessageResult;
 import pk.ajneb97.model.inventory.InventoryPlayer;
 import pk.ajneb97.model.inventory.KitInventory;
 import pk.ajneb97.utils.PlayerUtils;
+import pk.ajneb97.utils.TaskUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -175,7 +176,10 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         if(playerName.equals("*")){
             playerDataManager.resetKitForAllPlayers(kitName,result -> {
                 String msg = messagesConfig.getString("kitResetCorrectAll");
-                if (msg != null) msgManager.sendMessage(sender, msg.replace("%kit%",kitName), true);
+                if (msg != null) {
+                    TaskUtils.runCommandSender(plugin, sender, () ->
+                            msgManager.sendMessage(sender, msg.replace("%kit%",kitName), true));
+                }
             });
         }else{
             PlayerKitsMessageResult result = playerDataManager.resetKitForPlayer(playerName,kitName);
@@ -216,7 +220,12 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         }
 
         InventoryPlayer inventoryPlayer = new InventoryPlayer(player,inventoryName);
-        plugin.getInventoryManager().openInventory(inventoryPlayer);
+        TaskUtils.runEntity(plugin, player, () -> {
+            if (!player.isOnline()) {
+                return;
+            }
+            plugin.getInventoryManager().openInventory(inventoryPlayer);
+        });
     }
 
     public void give(CommandSender sender,String[] args,FileConfiguration messagesConfig,MessagesManager msgManager){
@@ -239,14 +248,31 @@ public class MainCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        PlayerKitsMessageResult result = plugin.getKitsManager().giveKit(player,kitName,new GiveKitInstructions(true,false,false,false));
-        if(result.isError()){
-            String msg = messagesConfig.getString("commandGiveError2");
-            if (msg != null) msgManager.sendMessage(sender,msg.replace("%error%",result.getMessage()),true);
-        }else{
-            String msg = messagesConfig.getString("commandGiveCorrect");
-            if (msg != null) msgManager.sendMessage(sender,msg.replace("%kit%",kitName).replace("%player%",args[2]),true);
-        }
+        TaskUtils.runEntity(plugin, player, () -> {
+            if (!player.isOnline()) {
+                TaskUtils.runCommandSender(plugin, sender, () -> {
+                    String msg = messagesConfig.getString("playerNotOnline");
+                    if (msg != null) {
+                        msgManager.sendMessage(sender, msg.replace("%player%", args[2]), true);
+                    }
+                });
+                return;
+            }
+            PlayerKitsMessageResult result = plugin.getKitsManager().giveKit(player,kitName,new GiveKitInstructions(true,false,false,false));
+            TaskUtils.runCommandSender(plugin, sender, () -> {
+                if(result.isError()){
+                    String msg = messagesConfig.getString("commandGiveError2");
+                    if (msg != null) {
+                        msgManager.sendMessage(sender,msg.replace("%error%",result.getMessage()),true);
+                    }
+                }else{
+                    String msg = messagesConfig.getString("commandGiveCorrect");
+                    if (msg != null) {
+                        msgManager.sendMessage(sender,msg.replace("%kit%",kitName).replace("%player%",args[2]),true);
+                    }
+                }
+            });
+        });
     }
 
     public void claim(Player player,String[] args,FileConfiguration messagesConfig,MessagesManager msgManager){
@@ -316,7 +342,12 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         InventoryPlayer inventoryPlayer = new InventoryPlayer(player,"preview_inventory");
         inventoryPlayer.setKitName(args[1]);
         inventoryPlayer.setPreviousInventoryName("main_inventory");
-        plugin.getInventoryManager().openInventory(inventoryPlayer);
+        TaskUtils.runEntity(plugin, player, () -> {
+            if (!player.isOnline()) {
+                return;
+            }
+            plugin.getInventoryManager().openInventory(inventoryPlayer);
+        });
     }
 
     public void claimKitShortCommand(Player player,FileConfiguration messagesConfig,MessagesManager msgManager,String kitName){

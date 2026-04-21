@@ -6,11 +6,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PlayerData {
 
-    private String name;
-    private UUID uuid;
+    private volatile String name;
+    private volatile UUID uuid;
 
-    private List<PlayerDataKit> kits;
-    private boolean modified;
+    private volatile List<PlayerDataKit> kits;
+    private volatile boolean modified;
 
     public PlayerData(UUID uuid, String name){
         this.name = name;

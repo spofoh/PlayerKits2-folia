@@ -29,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class InventoryManager {
 
     private PlayerKits2 plugin;
-    private List<KitInventory> inventories;
+    private volatile List<KitInventory> inventories;
     private final List<InventoryPlayer> players;
 
     private InventoryRequirementsManager inventoryRequirementsManager;

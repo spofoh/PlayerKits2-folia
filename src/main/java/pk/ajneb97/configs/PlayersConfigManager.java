@@ -57,11 +57,7 @@ public class PlayersConfigManager extends DataFolderConfigManager{
                 playerData.setKits(playerDataKits);
             }
 
-            PlayerData finalPlayer = playerData;
-
-            TaskUtils.runSync(plugin, () -> {
-                callback.onDone(finalPlayer);
-            });
+            callback.onDone(playerData);
         });
     }
 

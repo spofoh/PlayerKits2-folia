@@ -77,7 +77,7 @@ public class InventoryEditListener implements Listener {
         InventoryPlayer inventoryPlayer = invManager.getInventoryPlayer(player);
         if(inventoryPlayer != null) {
             event.setCancelled(true);
-            TaskUtils.runSync(plugin, () -> {
+            TaskUtils.runEntity(plugin, player, () -> {
                 invManager.writeChat(inventoryPlayer, ChatColor.stripColor(event.getMessage()));
             });
         }

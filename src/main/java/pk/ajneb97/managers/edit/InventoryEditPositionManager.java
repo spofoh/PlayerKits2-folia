@@ -162,7 +162,7 @@ public class InventoryEditPositionManager {
     public void closeInventory(InventoryPlayer inventoryPlayer){
         boolean mustReturn = Boolean.parseBoolean(inventoryPlayer.getInventoryName().split(";")[2]);
         if(mustReturn){
-            TaskUtils.runSyncLater(plugin, () -> {
+            TaskUtils.runEntityLater(plugin, inventoryPlayer.getPlayer(), () -> {
                 inventoryPlayer.restoreSavedInventoryContents();
                 inventoryEditManager.openInventory(inventoryPlayer);
             }, 1L);

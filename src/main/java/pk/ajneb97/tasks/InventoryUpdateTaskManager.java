@@ -20,7 +20,7 @@ public class InventoryUpdateTaskManager {
     }
 
     public void start(){
-        TaskUtils.runAsyncTimer(plugin, this::execute, 0L, 20L);
+        TaskUtils.runSyncTimer(plugin, this::execute, 0L, 20L);
     }
 
     public void execute(){
