@@ -43,6 +43,7 @@ public class PlayerKits2 extends JavaPlugin {
     private InventoryUpdateTaskManager inventoryUpdateTaskManager;
     private PlayerDataSaveTask playerDataSaveTask;
     private MySQLConnection mySQLConnection;
+    private RedisSyncManager redisSyncManager;
 
     public void onEnable(){
         setVersion();
@@ -72,8 +73,16 @@ public class PlayerKits2 extends JavaPlugin {
         if(configsManager.getMainConfigManager().isMySQL()){
             mySQLConnection = new MySQLConnection(this);
             mySQLConnection.setupMySql();
-        }else{
+        }
+        if(!isMySQLActive()){
             reloadPlayerDataSaveTask();
+            if(configsManager.getMainConfigManager().isRedisSyncEnabled()){
+                Bukkit.getConsoleSender().sendMessage(MessagesManager.getLegacyColoredMessage(
+                        prefix+"&eRedis sync requires MySQL. It won't start while MySQL is inactive."));
+            }
+        }else if(configsManager.getMainConfigManager().isRedisSyncEnabled()){
+            redisSyncManager = new RedisSyncManager(this);
+            redisSyncManager.setup();
         }
 
         PlayerKitsAPI api = new PlayerKitsAPI(this);
@@ -90,7 +99,13 @@ public class PlayerKits2 extends JavaPlugin {
     }
 
     public void onDisable(){
+        if(redisSyncManager != null){
+            redisSyncManager.disable();
+        }
         this.configsManager.getPlayersConfigManager().saveConfigs();
+        if(mySQLConnection != null){
+            mySQLConnection.disable();
+        }
         Bukkit.getConsoleSender().sendMessage(MessagesManager.getLegacyColoredMessage(prefix+"&eHas been disabled! &fVersion: "+version));
     }
 
@@ -204,6 +219,21 @@ public class PlayerKits2 extends JavaPlugin {
 
     public MySQLConnection getMySQLConnection() {
         return mySQLConnection;
+    }
+
+    public MySQLConnection getActiveMySQLConnection() {
+        if(mySQLConnection != null && mySQLConnection.isActive()){
+            return mySQLConnection;
+        }
+        return null;
+    }
+
+    public boolean isMySQLActive() {
+        return getActiveMySQLConnection() != null;
+    }
+
+    public RedisSyncManager getRedisSyncManager() {
+        return redisSyncManager;
     }
 
     public NMSManager getNmsManager() {

@@ -82,8 +82,7 @@ public class PlayersConfigManager extends DataFolderConfigManager{
     @Override
     public void saveConfigs(){
         Map<UUID, PlayerData> players = plugin.getPlayerDataManager().getPlayers();
-        boolean isMySQL = plugin.getConfigsManager().getMainConfigManager().isMySQL();
-        if(!isMySQL){
+        if(!plugin.isMySQLActive()){
             for(Map.Entry<UUID, PlayerData> entry : players.entrySet()) {
                 PlayerData playerData = entry.getValue();
                 if(playerData.isModified()){
@@ -105,5 +104,17 @@ public class PlayersConfigManager extends DataFolderConfigManager{
 
             commonConfig.saveConfig();
         }
+    }
+
+    public boolean resetKitForPlayer(UUID uuid, String kitName){
+        CommonConfig playerConfig = getConfigFile(uuid+".yml",false);
+        if(playerConfig == null){
+            return false;
+        }
+
+        FileConfiguration config = playerConfig.getConfig();
+        config.set("kits."+kitName,null);
+        playerConfig.saveConfig();
+        return true;
     }
 }

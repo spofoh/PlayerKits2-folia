@@ -27,6 +27,14 @@ public class MainConfigManager {
     private boolean isMySQL;
     private boolean updateNotify;
     private boolean useMiniMessage;
+    private boolean redisSyncEnabled;
+    private String redisSyncHost;
+    private int redisSyncPort;
+    private String redisSyncPassword;
+    private int redisSyncDatabase;
+    private int redisSyncTimeout;
+    private boolean redisSyncSSL;
+    private String redisSyncChannel;
 
     public MainConfigManager(PlayerKits2 plugin){
         this.plugin = plugin;
@@ -48,6 +56,14 @@ public class MainConfigManager {
         claimKitShortCommand = config.getBoolean("claim_kit_short_command");
         useMiniMessage = config.getBoolean("use_minimessage");
         newKitDefaultSaveModeOriginal = config.getBoolean("new_kit_default_save_mode_original");
+        redisSyncEnabled = config.getBoolean("redis_sync.enabled");
+        redisSyncHost = config.getString("redis_sync.host","localhost");
+        redisSyncPort = config.getInt("redis_sync.port",6379);
+        redisSyncPassword = config.getString("redis_sync.password","");
+        redisSyncDatabase = config.getInt("redis_sync.database",0);
+        redisSyncTimeout = config.getInt("redis_sync.timeout",2000);
+        redisSyncSSL = config.getBoolean("redis_sync.ssl",false);
+        redisSyncChannel = config.getString("redis_sync.channel","playerkits2:sync");
     }
 
     public boolean reloadConfig(){
@@ -79,6 +95,17 @@ public class MainConfigManager {
             }
             if(!text.contains("new_kit_default_save_mode_original:")){
                 getConfig().set("new_kit_default_save_mode_original", true);
+                configFile.saveConfig();
+            }
+            if(!text.contains("redis_sync:")){
+                getConfig().set("redis_sync.enabled", false);
+                getConfig().set("redis_sync.host", "localhost");
+                getConfig().set("redis_sync.port", 6379);
+                getConfig().set("redis_sync.password", "");
+                getConfig().set("redis_sync.database", 0);
+                getConfig().set("redis_sync.timeout", 2000);
+                getConfig().set("redis_sync.ssl", false);
+                getConfig().set("redis_sync.channel", "playerkits2:sync");
                 configFile.saveConfig();
             }
         }catch(IOException e){
@@ -128,5 +155,37 @@ public class MainConfigManager {
 
     public boolean isUseMiniMessage() {
         return useMiniMessage;
+    }
+
+    public boolean isRedisSyncEnabled() {
+        return redisSyncEnabled;
+    }
+
+    public String getRedisSyncHost() {
+        return redisSyncHost;
+    }
+
+    public int getRedisSyncPort() {
+        return redisSyncPort;
+    }
+
+    public String getRedisSyncPassword() {
+        return redisSyncPassword;
+    }
+
+    public int getRedisSyncDatabase() {
+        return redisSyncDatabase;
+    }
+
+    public int getRedisSyncTimeout() {
+        return redisSyncTimeout;
+    }
+
+    public boolean isRedisSyncSSL() {
+        return redisSyncSSL;
+    }
+
+    public String getRedisSyncChannel() {
+        return redisSyncChannel;
     }
 }

@@ -130,8 +130,28 @@ public class PlayerData {
         }
     }
 
+    public PlayerDataKit setKitState(String kitName, long cooldown, boolean oneTime, boolean bought){
+        PlayerDataKit playerDataKit = getKit(kitName);
+        if(playerDataKit == null){
+            playerDataKit = new PlayerDataKit(kitName);
+            kits.add(playerDataKit);
+        }
+
+        playerDataKit.setCooldown(cooldown);
+        playerDataKit.setOneTime(oneTime);
+        playerDataKit.setBought(bought);
+        return playerDataKit;
+    }
+
+    public boolean removeKit(String kitName, boolean markModified){
+        boolean removed = kits.removeIf(kit -> kit.getName().equals(kitName));
+        if(removed && markModified){
+            modified = true;
+        }
+        return removed;
+    }
+
     public void resetKit(String kitName){
-        kits.removeIf(kit -> kit.getName().equals(kitName));
-        modified = true;
+        removeKit(kitName, true);
     }
 }

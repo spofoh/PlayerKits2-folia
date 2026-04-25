@@ -10,6 +10,7 @@ import pk.ajneb97.model.internal.GenericCallback;
 import pk.ajneb97.model.internal.SimpleCallback;
 import pk.ajneb97.utils.TaskUtils;
 
+import java.sql.DatabaseMetaData;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,34 +21,60 @@ public class MySQLConnection {
 
     private PlayerKits2 plugin;
     private HikariConnection connection;
+    private volatile boolean active;
+
+    private static final String PLAYER_KIT_UNIQUE_KEY = "pk_playerkits_uuid_name_unique";
 
     public MySQLConnection(PlayerKits2 plugin){
         this.plugin = plugin;
+        this.active = false;
     }
 
     public void setupMySql(){
         FileConfiguration config = plugin.getConfigsManager().getMainConfigManager().getConfig();
         try {
             connection = new HikariConnection(config);
-            connection.getHikari().getConnection();
-            createTables();
+            try(Connection ignored = connection.getHikari().getConnection()){
+                // Connection validation
+            }
+            active = true;
+            if(!createTables()){
+                active = false;
+                disable();
+                Bukkit.getConsoleSender().sendMessage(MessagesManager.getLegacyColoredMessage(plugin.prefix+" &cError while connecting to the Database."));
+                return;
+            }
             Bukkit.getConsoleSender().sendMessage(MessagesManager.getLegacyColoredMessage(plugin.prefix+" &aSuccessfully connected to the Database."));
         }catch(Exception e) {
+            active = false;
+            disable();
             Bukkit.getConsoleSender().sendMessage(MessagesManager.getLegacyColoredMessage(plugin.prefix+" &cError while connecting to the Database."));
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
         }
     }
 
     public Connection getConnection() {
+        if(!isActive()){
+            return null;
+        }
         try {
             return connection.getHikari().getConnection();
         } catch (Exception e) {
+            active = false;
             plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
             return null;
         }
     }
 
-    public void createTables() {
+    public boolean isActive() {
+        return active && connection != null;
+    }
+
+    public boolean createTables() {
         try(Connection connection = getConnection()){
+            if(connection == null){
+                return false;
+            }
             PreparedStatement statement1 = connection.prepareStatement(
                     "CREATE TABLE IF NOT EXISTS playerkits_players" +
                     " (UUID varchar(200) NOT NULL, " +
@@ -66,15 +93,60 @@ public class MySQLConnection {
                     " PRIMARY KEY ( ID ), " +
                     " FOREIGN KEY (UUID) REFERENCES playerkits_players(UUID))");
             statement2.executeUpdate();
+
+            removeDuplicatePlayerKitRows(connection);
+            ensurePlayerKitUniqueConstraint(connection);
+            return true;
         } catch (SQLException e) {
             plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
+            return false;
         }
+    }
+
+    private void removeDuplicatePlayerKitRows(Connection connection) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement(
+                "DELETE older FROM playerkits_players_kits older " +
+                        "INNER JOIN playerkits_players_kits newer " +
+                        "ON older.UUID = newer.UUID AND older.NAME = newer.NAME AND older.ID < newer.ID");
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    private void ensurePlayerKitUniqueConstraint(Connection connection) throws SQLException {
+        if(hasIndex(connection, "playerkits_players_kits", PLAYER_KIT_UNIQUE_KEY)) {
+            return;
+        }
+
+        PreparedStatement statement = connection.prepareStatement(
+                "ALTER TABLE playerkits_players_kits " +
+                        "ADD CONSTRAINT " + PLAYER_KIT_UNIQUE_KEY + " UNIQUE (UUID, NAME)");
+        statement.executeUpdate();
+        statement.close();
+    }
+
+    private boolean hasIndex(Connection connection, String tableName, String indexName) throws SQLException {
+        DatabaseMetaData metaData = connection.getMetaData();
+        String catalog = connection.getCatalog();
+        ResultSet resultSet = metaData.getIndexInfo(catalog, null, tableName, false, false);
+        while(resultSet.next()) {
+            String currentIndexName = resultSet.getString("INDEX_NAME");
+            if(currentIndexName != null && currentIndexName.equalsIgnoreCase(indexName)) {
+                resultSet.close();
+                return true;
+            }
+        }
+        resultSet.close();
+        return false;
     }
 
     public void getPlayer(String uuid, GenericCallback<PlayerData> callback){
         TaskUtils.runAsync(plugin, () -> {
             PlayerData player = null;
             try(Connection connection = getConnection()){
+                if(connection == null){
+                    callback.onDone(null);
+                    return;
+                }
                 PreparedStatement statement = connection.prepareStatement(
                         "SELECT playerkits_players.UUID, playerkits_players.PLAYER_NAME, " +
                                 "playerkits_players_kits.NAME, " +
@@ -88,7 +160,6 @@ public class MySQLConnection {
                 statement.setString(1, uuid);
                 ResultSet result = statement.executeQuery();
 
-                boolean firstFind = true;
                 while(result.next()){
                     UUID uuid1 = UUID.fromString(result.getString("UUID"));
                     String playerName = result.getString("PLAYER_NAME");
@@ -111,6 +182,7 @@ public class MySQLConnection {
                 callback.onDone(player);
             } catch (SQLException e) {
                 plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
+                callback.onDone(null);
             }
         });
     }
@@ -118,17 +190,21 @@ public class MySQLConnection {
     public void createPlayer(PlayerData player, SimpleCallback callback){
         TaskUtils.runAsync(plugin, () -> {
             try(Connection connection = getConnection()){
+                if(connection == null){
+                    return;
+                }
                 PreparedStatement statement = connection.prepareStatement(
                         "INSERT INTO playerkits_players " +
-                                "(UUID, PLAYER_NAME) VALUE (?,?)");
+                                "(UUID, PLAYER_NAME) VALUES (?,?) " +
+                                "ON DUPLICATE KEY UPDATE PLAYER_NAME=VALUES(PLAYER_NAME)");
 
                 statement.setString(1, player.getUuid().toString());
                 statement.setString(2, player.getName());
                 statement.executeUpdate();
-
-                callback.onDone();
             } catch (SQLException e) {
                 plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
+            } finally {
+                callback.onDone();
             }
         });
     }
@@ -136,6 +212,9 @@ public class MySQLConnection {
     public void updatePlayerName(PlayerData player){
         TaskUtils.runAsync(plugin, () -> {
             try(Connection connection = getConnection()){
+                if(connection == null){
+                    return;
+                }
                 PreparedStatement statement = connection.prepareStatement(
                         "UPDATE playerkits_players SET " +
                                 "PLAYER_NAME=? WHERE UUID=?");
@@ -149,33 +228,23 @@ public class MySQLConnection {
         });
     }
 
-    public void updateKit(PlayerData player,PlayerDataKit kit,boolean mustCreate){
+    public void updateKit(PlayerData player,PlayerDataKit kit){
         TaskUtils.runAsync(plugin, () -> {
             try(Connection connection = getConnection()){
-                PreparedStatement statement = null;
-                if(mustCreate){
-                    // Insert
-                    statement = connection.prepareStatement(
-                            "INSERT INTO playerkits_players_kits " +
-                                    "(UUID, NAME, COOLDOWN, ONE_TIME, BOUGHT) VALUE (?,?,?,?,?)");
-
-                    statement.setString(1, player.getUuid().toString());
-                    statement.setString(2, kit.getName());
-                    statement.setLong(3, kit.getCooldown());
-                    statement.setBoolean(4, kit.isOneTime());
-                    statement.setBoolean(5, kit.isBought());
-                }else{
-                    // Update
-                    statement = connection.prepareStatement(
-                            "UPDATE playerkits_players_kits SET " +
-                                    "COOLDOWN=?, ONE_TIME=?, BOUGHT=? WHERE UUID=? AND NAME=?");
-
-                    statement.setLong(1, kit.getCooldown());
-                    statement.setBoolean(2, kit.isOneTime());
-                    statement.setBoolean(3, kit.isBought());
-                    statement.setString(4, player.getUuid().toString());
-                    statement.setString(5, kit.getName());
+                if(connection == null){
+                    return;
                 }
+                PreparedStatement statement = connection.prepareStatement(
+                        "INSERT INTO playerkits_players_kits " +
+                                "(UUID, NAME, COOLDOWN, ONE_TIME, BOUGHT) VALUES (?,?,?,?,?) " +
+                                "ON DUPLICATE KEY UPDATE " +
+                                "COOLDOWN=VALUES(COOLDOWN), ONE_TIME=VALUES(ONE_TIME), BOUGHT=VALUES(BOUGHT)");
+
+                statement.setString(1, player.getUuid().toString());
+                statement.setString(2, kit.getName());
+                statement.setLong(3, kit.getCooldown());
+                statement.setBoolean(4, kit.isOneTime());
+                statement.setBoolean(5, kit.isBought());
                 statement.executeUpdate();
             } catch (SQLException e) {
                 plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
@@ -184,8 +253,15 @@ public class MySQLConnection {
     }
 
     public void resetKit(String uuid,String kitName,boolean all){
+        resetKit(uuid,kitName,all,null);
+    }
+
+    public void resetKit(String uuid,String kitName,boolean all, SimpleCallback callback){
         TaskUtils.runAsync(plugin, () -> {
             try(Connection connection = getConnection()){
+                if(connection == null){
+                    return;
+                }
                 PreparedStatement statement;
                 if(all){
                     statement = connection.prepareStatement(
@@ -204,7 +280,41 @@ public class MySQLConnection {
 
             } catch (SQLException e) {
                 plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
+            } finally {
+                if(callback != null){
+                    callback.onDone();
+                }
             }
         });
+    }
+
+    public void getPlayerUUIDByName(String playerName, GenericCallback<UUID> callback){
+        TaskUtils.runAsync(plugin, () -> {
+            UUID uuid = null;
+            try(Connection connection = getConnection()){
+                if(connection == null){
+                    callback.onDone(null);
+                    return;
+                }
+                PreparedStatement statement = connection.prepareStatement(
+                        "SELECT UUID FROM playerkits_players WHERE LOWER(PLAYER_NAME)=LOWER(?) LIMIT 1");
+                statement.setString(1, playerName);
+                ResultSet result = statement.executeQuery();
+                if(result.next()){
+                    uuid = UUID.fromString(result.getString("UUID"));
+                }
+            } catch (SQLException | IllegalArgumentException e) {
+                plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
+            }
+            callback.onDone(uuid);
+        });
+    }
+
+    public void disable() {
+        active = false;
+        if(connection != null){
+            connection.disable();
+            connection = null;
+        }
     }
 }

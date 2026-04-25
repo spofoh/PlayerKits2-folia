@@ -118,7 +118,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit edit <kit> &8Edits a kit."));
         sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit give <kit> <player> &8Gives a kit to a player."));
         sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit delete <kit> &8Deletes a kit."));
-        sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit reset <kit> <player>/* &8Resets kit data for a player."));
+        sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit reset <kit> <target>/* &8Resets kit data for a player name or UUID."));
         sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit preview <kit> (optional)<player> &8Previews a kit."));
         sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit open <inventory> <player> &8Opens a specific inventory for a player."));
         sender.sendMessage(MessagesManager.getLegacyColoredMessage("&6/kit reload &8Reloads the config."));
@@ -155,10 +155,17 @@ public class MainCommand implements CommandExecutor, TabCompleter {
             return;
         }
         msgManager.sendMessage(sender,messagesConfig.getString("commandReload"),true);
+        if(plugin.getConfigsManager().isStorageBackendChangeRequiresRestart()){
+            String warning = messagesConfig.getString("storageBackendChangeRequiresRestart");
+            if(warning == null){
+                warning = "&eStorage/sync settings changed. &cRestart the server to apply them.";
+            }
+            msgManager.sendMessage(sender,warning,true);
+        }
     }
 
     public void reset(CommandSender sender,String[] args,FileConfiguration messagesConfig,MessagesManager msgManager) {
-        // /kits reset <kit> <player>
+        // /kits reset <kit> <target>
         if(!PlayerUtils.isPlayerKitsAdmin(sender)) {
             msgManager.sendMessage(sender, messagesConfig.getString("noPermissions"), true);
             return;
@@ -182,13 +189,18 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                 }
             });
         }else{
-            PlayerKitsMessageResult result = playerDataManager.resetKitForPlayer(playerName,kitName);
-            if(result.isError()){
-                msgManager.sendMessage(sender, result.getMessage(), true);
-            }else{
-                String msg = messagesConfig.getString("kitResetCorrect");
-                if (msg != null) msgManager.sendMessage(sender, msg.replace("%kit%",kitName).replace("%player%",playerName), true);
-            }
+            playerDataManager.resetKitForTarget(playerName, kitName, result -> {
+                TaskUtils.runCommandSender(plugin, sender, () -> {
+                    if(result.isError()){
+                        msgManager.sendMessage(sender, result.getMessage(), true);
+                    }else{
+                        String msg = messagesConfig.getString("kitResetCorrect");
+                        if (msg != null) {
+                            msgManager.sendMessage(sender, msg.replace("%kit%",kitName).replace("%player%",playerName), true);
+                        }
+                    }
+                });
+            });
         }
     }
 

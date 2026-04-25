@@ -169,6 +169,14 @@ public class KitsManager {
             return PlayerKitsMessageResult.error(msg != null ? msg.replace("%kit%",kitName) : "");
         }
 
+        if(!giveKitInstructions.isFromCommand() && plugin.getPlayerDataManager().isPlayerDataLoading(player)){
+            String msg = messagesFile.getString("playerDataLoading");
+            if(msg == null){
+                msg = "&cYour data is still loading. Try again in a moment.";
+            }
+            return PlayerKitsMessageResult.error(msg);
+        }
+
         //Check properties
         if(!giveKitInstructions.isFromCommand()){
             //Permission
