@@ -24,6 +24,8 @@ public class MySQLConnection {
     private volatile boolean active;
 
     private static final String PLAYER_KIT_UNIQUE_KEY = "pk_playerkits_uuid_name_unique";
+    private static final int UUID_LENGTH = 36;
+    private static final int KIT_NAME_LENGTH = 100;
 
     public MySQLConnection(PlayerKits2 plugin){
         this.plugin = plugin;
@@ -77,7 +79,7 @@ public class MySQLConnection {
             }
             PreparedStatement statement1 = connection.prepareStatement(
                     "CREATE TABLE IF NOT EXISTS playerkits_players" +
-                    " (UUID varchar(200) NOT NULL, " +
+                    " (UUID CHAR(" + UUID_LENGTH + ") NOT NULL, " +
                     " PLAYER_NAME varchar(50), " +
                     " PRIMARY KEY ( UUID ))"
             );
@@ -85,8 +87,8 @@ public class MySQLConnection {
             PreparedStatement statement2 = connection.prepareStatement(
                     "CREATE TABLE IF NOT EXISTS playerkits_players_kits" +
                     " (ID int NOT NULL AUTO_INCREMENT, " +
-                    " UUID varchar(200) NOT NULL, " +
-                    " NAME varchar(100), " +
+                    " UUID CHAR(" + UUID_LENGTH + ") NOT NULL, " +
+                    " NAME varchar(" + KIT_NAME_LENGTH + "), " +
                     " COOLDOWN BIGINT, " +
                     " ONE_TIME BOOLEAN, " +
                     " BOUGHT BOOLEAN, " +
@@ -117,11 +119,26 @@ public class MySQLConnection {
             return;
         }
 
-        PreparedStatement statement = connection.prepareStatement(
+        try(PreparedStatement statement = connection.prepareStatement(
                 "ALTER TABLE playerkits_players_kits " +
-                        "ADD CONSTRAINT " + PLAYER_KIT_UNIQUE_KEY + " UNIQUE (UUID, NAME)");
-        statement.executeUpdate();
-        statement.close();
+                        "ADD CONSTRAINT " + PLAYER_KIT_UNIQUE_KEY + " UNIQUE (UUID, NAME)")) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            if(!isKeyTooLongError(e)) {
+                throw e;
+            }
+            // Compatibility fallback for old schemas/databases with low index byte limits.
+            try(PreparedStatement statement = connection.prepareStatement(
+                    "ALTER TABLE playerkits_players_kits " +
+                            "ADD CONSTRAINT " + PLAYER_KIT_UNIQUE_KEY + " UNIQUE (UUID(" + UUID_LENGTH + "), NAME(" + KIT_NAME_LENGTH + "))")) {
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private boolean isKeyTooLongError(SQLException e) {
+        return e.getErrorCode() == 1071 ||
+                (e.getMessage() != null && e.getMessage().toLowerCase(Locale.ROOT).contains("key was too long"));
     }
 
     private boolean hasIndex(Connection connection, String tableName, String indexName) throws SQLException {

@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Mon Apr 27 16:38:06 CEST 2026
+jedis-4.4.8.jar>papermc=
+jedis-4.4.8.pom>papermc=
