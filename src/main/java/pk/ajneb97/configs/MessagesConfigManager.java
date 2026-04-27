@@ -82,6 +82,15 @@ public class MessagesConfigManager {
                 getConfig().set("pluginCriticalErrors", "&cThe plugin has detected some errors. Check them using &7/kit verify");
                 saveConfig();
             }
+            if(!text.contains("commandOpenCorrect:")){
+                getConfig().set("commandOpenCorrect", "&aOpening inventory &7%inventory% &afor &e%player%&a.");
+                saveConfig();
+            }
+            if(!text.contains("commandCrossServerForwarding:")){
+                getConfig().set("commandCrossServerForwarding", "&eProcessing command for &7%player%&e on another server...");
+                getConfig().set("commandCrossServerFailed", "&cCould not execute cross-server command.");
+                saveConfig();
+            }
 
         }catch(IOException e){
             plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);

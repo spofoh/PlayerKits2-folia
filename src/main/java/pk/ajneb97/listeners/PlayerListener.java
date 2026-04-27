@@ -11,8 +11,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import pk.ajneb97.PlayerKits2;
 import pk.ajneb97.managers.InventoryManager;
 import pk.ajneb97.managers.MessagesManager;
+import pk.ajneb97.managers.RedisSyncManager;
 import pk.ajneb97.model.inventory.InventoryPlayer;
 import pk.ajneb97.utils.InventoryUtils;
+import pk.ajneb97.utils.TaskUtils;
 
 public class PlayerListener implements Listener {
 
@@ -25,6 +27,10 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
         plugin.getPlayerDataManager().manageJoin(player);
+        RedisSyncManager redisSyncManager = plugin.getRedisSyncManager();
+        if(redisSyncManager != null && redisSyncManager.isActive()){
+            redisSyncManager.publishOnlineSnapshot();
+        }
 
         //Update notification
         String latestVersion = plugin.getUpdateCheckerManager().getLatestVersion();
@@ -36,6 +42,10 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onLeave(PlayerQuitEvent event){
+        RedisSyncManager redisSyncManager = plugin.getRedisSyncManager();
+        if(redisSyncManager != null && redisSyncManager.isActive()){
+            TaskUtils.runSyncLater(plugin, redisSyncManager::publishOnlineSnapshot, 1L);
+        }
         plugin.getPlayerDataManager().manageLeave(event.getPlayer());
     }
 

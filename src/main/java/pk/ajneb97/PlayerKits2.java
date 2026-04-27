@@ -84,6 +84,7 @@ public class PlayerKits2 extends JavaPlugin {
             redisSyncManager = new RedisSyncManager(this);
             redisSyncManager.setup();
         }
+        playerDataManager.preloadKnownPlayerNames();
 
         PlayerKitsAPI api = new PlayerKitsAPI(this);
         if(getServer().getPluginManager().getPlugin("PlaceholderAPI") != null){

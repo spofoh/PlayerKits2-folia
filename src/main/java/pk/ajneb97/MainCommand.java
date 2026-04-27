@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import pk.ajneb97.configs.MainConfigManager;
 import pk.ajneb97.managers.MessagesManager;
 import pk.ajneb97.managers.PlayerDataManager;
+import pk.ajneb97.managers.RedisSyncManager;
 import pk.ajneb97.model.Kit;
 import pk.ajneb97.model.internal.GiveKitInstructions;
 import pk.ajneb97.model.internal.PlayerKitsMessageResult;
@@ -224,8 +225,11 @@ public class MainCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        Player player = Bukkit.getPlayer(playerName);
+        Player player = getOnlinePlayer(playerName);
         if(player == null){
+            if(tryForwardRemoteCommand(sender, playerName, RedisSyncManager.COMMAND_TYPE_OPEN, inventoryName, messagesConfig, msgManager)){
+                return;
+            }
             String msg = messagesConfig.getString("playerNotOnline");
             if (msg != null) msgManager.sendMessage(sender,msg.replace("%player%",playerName),true);
             return;
@@ -253,8 +257,11 @@ public class MainCommand implements CommandExecutor, TabCompleter {
         }
 
         String kitName = args[1];
-        Player player = Bukkit.getPlayer(args[2]);
+        Player player = getOnlinePlayer(args[2]);
         if(player == null){
+            if(tryForwardRemoteCommand(sender, args[2], RedisSyncManager.COMMAND_TYPE_GIVE, kitName, messagesConfig, msgManager)){
+                return;
+            }
             msgManager.sendMessage(sender,messagesConfig.getString("playerNotOnline")
                     .replace("%player%",args[2]),true);
             return;
@@ -326,8 +333,11 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                 return;
             }
 
-            player = Bukkit.getPlayer(args[2]);
+            player = getOnlinePlayer(args[2]);
             if(player == null){
+                if(tryForwardRemoteCommand(sender, args[2], RedisSyncManager.COMMAND_TYPE_PREVIEW, args[1], messagesConfig, msgManager)){
+                    return;
+                }
                 String msg = messagesConfig.getString("playerNotOnline");
                 if (msg != null) msgManager.sendMessage(sender,msg.replace("%player%",args[2]),true);
                 return;
@@ -514,15 +524,10 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                     }
                     return completions;
                 }else if(args[0].equalsIgnoreCase("reset")){
-                    for(Player p : Bukkit.getOnlinePlayers()) {
-                        if(args[2].isEmpty() || p.getName().toLowerCase().startsWith(args[2].toLowerCase())){
-                            completions.add(p.getName());
-                        }
-                    }
-                    if(args[2].isEmpty() || "*".startsWith(args[2].toLowerCase())) {
-                        completions.add("*");
-                    }
-                    return completions;
+                    return getResetTargetCompletions(args,2);
+                }else if(args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("open")
+                        || args[0].equalsIgnoreCase("preview")){
+                    return getOnlinePlayerCompletions(args,2);
                 }
             }
         }
@@ -565,5 +570,97 @@ public class MainCommand implements CommandExecutor, TabCompleter {
             return null;
         }
         return completions;
+    }
+
+    public List<String> getOnlinePlayerCompletions(String[] args,int argPlayerPos){
+        String argPlayer = args[argPlayerPos];
+
+        RedisSyncManager redisSyncManager = plugin.getRedisSyncManager();
+        if(redisSyncManager != null && redisSyncManager.isActive()){
+            List<String> completions = redisSyncManager.getNetworkOnlinePlayerCompletions(argPlayer);
+            if(completions != null){
+                return completions;
+            }
+        }
+
+        List<String> completions = new ArrayList<>();
+        for(Player p : Bukkit.getOnlinePlayers()) {
+            if(argPlayer.isEmpty() || p.getName().toLowerCase().startsWith(argPlayer.toLowerCase())){
+                completions.add(p.getName());
+            }
+        }
+
+        if(completions.isEmpty()){
+            return null;
+        }
+        return completions;
+    }
+
+    public List<String> getResetTargetCompletions(String[] args,int argTargetPos){
+        String argTarget = args[argTargetPos];
+        List<String> completions = plugin.getPlayerDataManager().getKnownPlayerNameCompletions(argTarget);
+        if(completions == null){
+            completions = new ArrayList<>();
+        }
+
+        if(argTarget.isEmpty() || "*".startsWith(argTarget.toLowerCase())) {
+            completions.add("*");
+        }
+
+        if(completions.isEmpty()){
+            return null;
+        }
+        return completions;
+    }
+
+    private Player getOnlinePlayer(String playerName){
+        Player exactPlayer = Bukkit.getPlayerExact(playerName);
+        if(exactPlayer != null){
+            return exactPlayer;
+        }
+        for(Player player : Bukkit.getOnlinePlayers()){
+            if(player.getName().equalsIgnoreCase(playerName)){
+                return player;
+            }
+        }
+        return null;
+    }
+
+    private boolean tryForwardRemoteCommand(CommandSender sender, String playerName, String commandType, String arg1,
+                                            FileConfiguration messagesConfig, MessagesManager msgManager){
+        RedisSyncManager redisSyncManager = plugin.getRedisSyncManager();
+        if(redisSyncManager == null || !redisSyncManager.isActive()){
+            return false;
+        }
+
+        String targetInstanceId = redisSyncManager.getOnlinePlayerRemoteInstance(playerName);
+        if(targetInstanceId == null){
+            return false;
+        }
+
+        String forwardingMessage = messagesConfig.getString("commandCrossServerForwarding");
+        if(forwardingMessage == null){
+            forwardingMessage = "&eProcessing command for &7%player%&e on another server...";
+        }
+        msgManager.sendMessage(sender, forwardingMessage.replace("%player%",playerName), true);
+
+        redisSyncManager.sendRemoteCommandRequest(targetInstanceId, commandType, arg1, playerName, result -> {
+            TaskUtils.runCommandSender(plugin, sender, () -> {
+                String resultMessage = result.getMessage();
+                if(resultMessage != null && !resultMessage.isEmpty()){
+                    msgManager.sendMessage(sender, resultMessage, true);
+                    return;
+                }
+
+                if(!result.isSuccess()){
+                    String fallbackError = messagesConfig.getString("commandCrossServerFailed");
+                    if(fallbackError == null){
+                        fallbackError = "&cCould not execute cross-server command.";
+                    }
+                    msgManager.sendMessage(sender, fallbackError, true);
+                }
+            });
+        });
+        return true;
     }
 }

@@ -327,6 +327,30 @@ public class MySQLConnection {
         });
     }
 
+    public void getAllPlayerNames(GenericCallback<List<String>> callback){
+        TaskUtils.runAsync(plugin, () -> {
+            List<String> names = new ArrayList<>();
+            try(Connection connection = getConnection()){
+                if(connection == null){
+                    callback.onDone(names);
+                    return;
+                }
+                PreparedStatement statement = connection.prepareStatement(
+                        "SELECT PLAYER_NAME FROM playerkits_players WHERE PLAYER_NAME IS NOT NULL AND PLAYER_NAME <> ''");
+                ResultSet result = statement.executeQuery();
+                while(result.next()){
+                    String playerName = result.getString("PLAYER_NAME");
+                    if(playerName != null && !playerName.isEmpty()){
+                        names.add(playerName);
+                    }
+                }
+            } catch (SQLException e) {
+                plugin.getLogger().log(java.util.logging.Level.SEVERE, "An error occurred in PlayerKits2", e);
+            }
+            callback.onDone(names);
+        });
+    }
+
     public void disable() {
         active = false;
         if(connection != null){

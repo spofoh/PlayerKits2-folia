@@ -1,4 +1,5 @@
 package pk.ajneb97.managers;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import pk.ajneb97.PlayerKits2;
@@ -11,10 +12,9 @@ import pk.ajneb97.model.internal.PlayerKitsMessageResult;
 import pk.ajneb97.utils.OtherUtils;
 import pk.ajneb97.utils.TaskUtils;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PlayerDataManager {
 
@@ -22,12 +22,20 @@ public class PlayerDataManager {
     private Map<UUID, PlayerData> players;
     private Map<String,UUID> playerNames;
     private Set<UUID> loadingPlayers;
+    private Set<String> knownPlayerNames;
+    private AtomicBoolean knownPlayerNamesRefreshing;
+    private volatile long knownPlayerNamesLastRefresh;
+
+    private static final long KNOWN_PLAYER_NAMES_REFRESH_INTERVAL = 30_000L;
 
     public PlayerDataManager(PlayerKits2 plugin){
         this.plugin = plugin;
         this.players = new ConcurrentHashMap<>();
         this.playerNames = new ConcurrentHashMap<>();
         this.loadingPlayers = ConcurrentHashMap.newKeySet();
+        this.knownPlayerNames = ConcurrentHashMap.newKeySet();
+        this.knownPlayerNamesRefreshing = new AtomicBoolean(false);
+        this.knownPlayerNamesLastRefresh = 0L;
     }
 
     public Map<UUID,PlayerData> getPlayers() {
@@ -37,6 +45,7 @@ public class PlayerDataManager {
     public void addPlayer(PlayerData p){
         players.put(p.getUuid(),p);
         playerNames.put(p.getName(), p.getUuid());
+        rememberPlayerName(p.getName());
     }
 
     public PlayerData getPlayer(Player player, boolean create){
@@ -53,6 +62,7 @@ public class PlayerDataManager {
             playerNames.remove(oldName);
         }
         playerNames.put(newName,uuid);
+        rememberPlayerName(newName);
     }
 
     public PlayerData getPlayerByUUID(UUID uuid){
@@ -89,6 +99,73 @@ public class PlayerDataManager {
             playerNames.remove(playerData.getName());
         }
         loadingPlayers.remove(uuid);
+    }
+
+    private void rememberPlayerName(String playerName){
+        if(playerName == null || playerName.isEmpty()){
+            return;
+        }
+        knownPlayerNames.add(playerName);
+    }
+
+    public void preloadKnownPlayerNames(){
+        refreshKnownPlayerNamesIfNeeded(true);
+    }
+
+    private void refreshKnownPlayerNamesIfNeeded(boolean force){
+        MySQLConnection mySQLConnection = plugin.getActiveMySQLConnection();
+        if(mySQLConnection == null){
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        if(!force && (now - knownPlayerNamesLastRefresh) < KNOWN_PLAYER_NAMES_REFRESH_INTERVAL){
+            return;
+        }
+        if(!knownPlayerNamesRefreshing.compareAndSet(false,true)){
+            return;
+        }
+        knownPlayerNamesLastRefresh = now;
+
+        mySQLConnection.getAllPlayerNames(names -> {
+            try{
+                if(names == null){
+                    return;
+                }
+                for(String name : names){
+                    rememberPlayerName(name);
+                }
+            }finally{
+                knownPlayerNamesRefreshing.set(false);
+            }
+        });
+    }
+
+    public List<String> getKnownPlayerNameCompletions(String currentArg){
+        refreshKnownPlayerNamesIfNeeded(false);
+
+        String lowerArg = currentArg.toLowerCase(Locale.ROOT);
+        Set<String> completions = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+        for(Player player : Bukkit.getOnlinePlayers()){
+            String playerName = player.getName();
+            if(currentArg.isEmpty() || playerName.toLowerCase(Locale.ROOT).startsWith(lowerArg)){
+                completions.add(playerName);
+            }
+        }
+        for(String playerName : knownPlayerNames){
+            if(playerName == null){
+                continue;
+            }
+            if(currentArg.isEmpty() || playerName.toLowerCase(Locale.ROOT).startsWith(lowerArg)){
+                completions.add(playerName);
+            }
+        }
+
+        if(completions.isEmpty()){
+            return null;
+        }
+        return new ArrayList<>(completions);
     }
 
     private void setPlayerLoading(UUID uuid, boolean loading){
